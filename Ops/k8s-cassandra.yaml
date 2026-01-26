@@ -1,0 +1,43 @@
+# 4. CASSANDRA (Price History)
+# Using single-node config for local dev
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cassandra
+  namespace: grocersave-dev
+spec:
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      containers:
+      - name: cassandra
+        image: cassandra:4
+        ports:
+        - containerPort: 9042
+        env:
+        - name: CASSANDRA_CLUSTER_NAME
+          value: "GrocerCluster"
+        - name: CASSANDRA_DC
+          value: "datacenter1"
+        - name: CASSANDRA_ENDPOINT_SNITCH
+          value: "GossipingPropertyFileSnitch"
+        - name: HEAP_NEWSIZE
+          value: "128M"
+        - name: MAX_HEAP_SIZE
+          value: "512M"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+  namespace: grocersave-dev
+spec:
+  ports:
+  - port: 9042
+  selector:
+    app: cassandra

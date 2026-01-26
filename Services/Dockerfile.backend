@@ -1,0 +1,10 @@
+FROM node:18-alpine
+ARG SERVICE_NAME
+WORKDIR /app
+# Assuming the context is the project root, we copy the specific service folder
+COPY Services/${SERVICE_NAME}/package*.json ./
+RUN npm install
+COPY Services/${SERVICE_NAME}/ .
+# Expose the new ports
+EXPOSE 8180 8181 8182
+CMD ["node", "index.js"]

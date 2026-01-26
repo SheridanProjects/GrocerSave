@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+
+# Kubernetes generated files (from deploy script)
+*.gen.yaml
+
+# LocalStack / AWS
+.aws/
+aws-resources.json
+
+# Terraform (if used later)
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Python (if used later)
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Java / Gradle / Maven (if used later)
+.gradle/
+target/
+*.class
+*.jar
+*.war
+
+# GrocerSave Specific
+Ops/k8s-grocersave-apps.gen.yaml
+Ops/*.gen.yaml

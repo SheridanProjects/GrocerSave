@@ -1,0 +1,71 @@
+# 1. NGINX PROXY (Ingress Controller)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: grocersave-dev
+data:
+  nginx.conf: |
+    events { worker_connections 1024; }
+    http {
+      upstream bff { server bff-service:3100; }
+      upstream frontend { server frontend:80; }
+      
+      server {
+        listen 80;
+        
+        location /api/ {
+          proxy_pass http://bff/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+        }
+        
+        location / {
+          proxy_pass http://frontend;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  namespace: grocersave-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      containers:
+      - name: nginx-proxy
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      volumes:
+      - name: config-volume
+        configMap:
+          name: nginx-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-proxy
+  namespace: grocersave-dev
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 31000
+  selector:
+    app: nginx-proxy

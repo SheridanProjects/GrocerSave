@@ -1,0 +1,7 @@
+FROM node:18-alpine
+WORKDIR /app
+COPY Services/bff-service/package*.json ./
+RUN npm install
+COPY Services/bff-service/ .
+EXPOSE 3100
+CMD ["node", "index.js"]
