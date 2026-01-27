@@ -201,7 +201,16 @@ deploy_single() {
     done
 
     # Ensure we are targeting the correct cluster context
-    awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
+    # We do NOT run update-kubeconfig here to avoid switching context if the user is already set up
+    # However, for safety in CI/CD or fresh terminals, we check if the context exists first
+
+    CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null)
+    EXPECTED_CONTEXT="arn:aws:eks:us-east-1:000000000000:cluster/$CLUSTER_NAME"
+
+    if [ "$CURRENT_CONTEXT" != "$EXPECTED_CONTEXT" ]; then
+         echo -e "${YELLOW}Switching context to $CLUSTER_NAME...${NC}"
+         awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
+    fi
 
     if [ -n "$BUILD_SERVICE" ]; then
         deploy_service "$BUILD_SERVICE"
