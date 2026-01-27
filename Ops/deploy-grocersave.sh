@@ -3,7 +3,7 @@
 # ==========================================
 # GROCERSAVE DEPLOYMENT SCRIPT
 # ==========================================
-# Usage: ./deploy-grocersave.sh [all|shutdown]
+# Usage: ./deploy-grocersave.sh [all|shutdown|frontend|bff|auth|catalog|price|nginx|platform]
 
 NAMESPACE="grocersave-dev"
 CLUSTER_NAME="grocersave-cluster"
@@ -184,6 +184,32 @@ deploy_service() {
     echo -e "${GREEN}  Image pushed: $FULL_TAG${NC}"
 }
 
+deploy_single() {
+    APP_NAME=$1
+    MANIFEST=$2
+    BUILD_SERVICE=$3
+
+    init_env
+
+    if [ -n "$BUILD_SERVICE" ]; then
+        deploy_service "$BUILD_SERVICE"
+    fi
+
+    ECR_ROOT="000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud:4566"
+
+    echo -e "\n${YELLOW}>>> Applying $MANIFEST...${NC}"
+    sed "s|image: grocersave/|image: $ECR_ROOT/grocersave-|g" "$SCRIPT_DIR/$MANIFEST" > "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+    kubectl apply -f "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+    rm "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+
+    echo -e "${YELLOW}>>> Restarting $APP_NAME...${NC}"
+    if kubectl get deployment $APP_NAME -n $NAMESPACE > /dev/null 2>&1; then
+        kubectl rollout restart deployment/$APP_NAME -n $NAMESPACE
+    else
+         echo -e "${YELLOW}Deployment $APP_NAME created.${NC}"
+    fi
+}
+
 deploy_all() {
     init_env
 
@@ -251,6 +277,33 @@ case "$1" in
     all)
         deploy_all
         ;;
+    frontend)
+        deploy_single "frontend" "k8s-frontend.yaml" "frontend"
+        ;;
+    bff)
+        deploy_single "bff-service" "k8s-bff.yaml" "bff-service"
+        ;;
+    auth)
+        deploy_single "auth-service" "k8s-auth.yaml" "auth-service"
+        ;;
+    catalog)
+        deploy_single "catalog-service" "k8s-catalog.yaml" "catalog-service"
+        ;;
+    price)
+        deploy_single "price-service" "k8s-price.yaml" "price-service"
+        ;;
+    nginx)
+        deploy_single "nginx-proxy" "k8s-nginx.yaml" ""
+        ;;
+    platform)
+        init_env
+        echo -e "\n${YELLOW}>>> Deploying Platform...${NC}"
+        kubectl apply -f "$SCRIPT_DIR/k8s-namespace.yaml"
+        PLATFORM_MANIFESTS=("k8s-redis.yaml" "k8s-postgres.yaml" "k8s-rabbitmq.yaml" "k8s-cassandra.yaml" "k8s-elasticsearch.yaml")
+        for MANIFEST in "${PLATFORM_MANIFESTS[@]}"; do
+            kubectl apply -f "$SCRIPT_DIR/$MANIFEST"
+        done
+        ;;
     shutdown)
         echo -e "${YELLOW}Shutting down GrocerSave...${NC}"
 
@@ -270,6 +323,6 @@ case "$1" in
         kubectl delete -f "$SCRIPT_DIR/k8s-namespace.yaml" --ignore-not-found
         ;;
     *)
-        echo "Usage: ./deploy-grocersave.sh [all|shutdown]"
+        echo "Usage: ./deploy-grocersave.sh [all|shutdown|frontend|bff|auth|catalog|price|nginx|platform]"
         ;;
 esac
