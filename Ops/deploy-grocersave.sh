@@ -189,7 +189,19 @@ deploy_single() {
     MANIFEST=$2
     BUILD_SERVICE=$3
 
-    init_env
+    # Only init env, do NOT re-apply namespace or platform unless needed
+    # This prevents accidental overwrites or context switching issues
+
+    # Check prerequisites
+    for CMD in awslocal docker kubectl; do
+        if ! command -v $CMD &> /dev/null; then
+            echo -e "${RED}Error: $CMD is not installed.${NC}"
+            exit 1
+        fi
+    done
+
+    # Ensure we are targeting the correct cluster context
+    awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
 
     if [ -n "$BUILD_SERVICE" ]; then
         deploy_service "$BUILD_SERVICE"
