@@ -231,7 +231,12 @@ deploy_all() {
     echo -e "${YELLOW}>>> Restarting Applications...${NC}"
     APPS=("nginx-proxy" "frontend" "bff-service" "auth-service" "catalog-service" "price-service")
     for APP in "${APPS[@]}"; do
-        kubectl rollout restart deployment/$APP -n $NAMESPACE
+        # Check if deployment exists before restarting
+        if kubectl get deployment $APP -n $NAMESPACE > /dev/null 2>&1; then
+            kubectl rollout restart deployment/$APP -n $NAMESPACE
+        else
+            echo -e "${RED}Warning: Deployment $APP not found. Skipping restart.${NC}"
+        fi
     done
 
     echo -e "\n${GREEN}==========================================${NC}"

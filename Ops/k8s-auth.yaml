@@ -5,22 +5,32 @@ metadata:
   name: auth-service
   namespace: grocersave-dev
 spec:
+  replicas: 1
   selector:
-    matchLabels: app: auth-service
+    matchLabels:
+      app: auth-service
   template:
     metadata:
-      labels: app: auth-service
+      labels:
+        app: auth-service
     spec:
       containers:
       - name: auth-service
         image: grocersave/auth-service:latest
-        ports: [{containerPort: 8180}]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8180
         env:
-        - {name: PORT, value: "8180"}
-        - {name: DB_HOST, value: "postgres"}
-        - {name: POSTGRES_USER, value: "grocer_admin"}
-        - {name: POSTGRES_PASSWORD, value: "dev_secret_123"}
-        - {name: POSTGRES_DB, value: "grocersave_db"}
+        - name: PORT
+          value: "8180"
+        - name: DB_HOST
+          value: "postgres"
+        - name: POSTGRES_USER
+          value: "grocer_admin"
+        - name: POSTGRES_PASSWORD
+          value: "dev_secret_123"
+        - name: POSTGRES_DB
+          value: "grocersave_db"
 ---
 apiVersion: v1
 kind: Service
@@ -28,5 +38,7 @@ metadata:
   name: auth-service
   namespace: grocersave-dev
 spec:
-  ports: [{port: 8180}]
-  selector: app: auth-service
+  ports:
+  - port: 8180
+  selector:
+    app: auth-service

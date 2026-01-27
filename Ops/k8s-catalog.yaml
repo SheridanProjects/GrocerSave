@@ -5,23 +5,34 @@ metadata:
   name: catalog-service
   namespace: grocersave-dev
 spec:
+  replicas: 1
   selector:
-    matchLabels: app: catalog-service
+    matchLabels:
+      app: catalog-service
   template:
     metadata:
-      labels: app: catalog-service
+      labels:
+        app: catalog-service
     spec:
       containers:
       - name: catalog-service
         image: grocersave/catalog-service:latest
-        ports: [{containerPort: 8181}]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8181
         env:
-        - {name: PORT, value: "8181"}
-        - {name: DB_HOST, value: "postgres"}
-        - {name: ELASTIC_HOST, value: "elasticsearch:9200"}
-        - {name: POSTGRES_USER, value: "grocer_admin"}
-        - {name: POSTGRES_PASSWORD, value: "dev_secret_123"}
-        - {name: POSTGRES_DB, value: "grocersave_db"}
+        - name: PORT
+          value: "8181"
+        - name: DB_HOST
+          value: "postgres"
+        - name: ELASTIC_HOST
+          value: "elasticsearch:9200"
+        - name: POSTGRES_USER
+          value: "grocer_admin"
+        - name: POSTGRES_PASSWORD
+          value: "dev_secret_123"
+        - name: POSTGRES_DB
+          value: "grocersave_db"
 ---
 apiVersion: v1
 kind: Service
@@ -29,5 +40,7 @@ metadata:
   name: catalog-service
   namespace: grocersave-dev
 spec:
-  ports: [{port: 8181}]
-  selector: app: catalog-service
+  ports:
+  - port: 8181
+  selector:
+    app: catalog-service

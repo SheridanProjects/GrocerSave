@@ -5,20 +5,28 @@ metadata:
   name: price-service
   namespace: grocersave-dev
 spec:
+  replicas: 1
   selector:
-    matchLabels: app: price-service
+    matchLabels:
+      app: price-service
   template:
     metadata:
-      labels: app: price-service
+      labels:
+        app: price-service
     spec:
       containers:
       - name: price-service
         image: grocersave/price-service:latest
-        ports: [{containerPort: 8182}]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8182
         env:
-        - {name: PORT, value: "8182"}
-        - {name: CASSANDRA_HOST, value: "cassandra"}
-        - {name: RABBITMQ_HOST, value: "rabbitmq"}
+        - name: PORT
+          value: "8182"
+        - name: CASSANDRA_HOST
+          value: "cassandra"
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"
 ---
 apiVersion: v1
 kind: Service
@@ -26,5 +34,7 @@ metadata:
   name: price-service
   namespace: grocersave-dev
 spec:
-  ports: [{port: 8182}]
-  selector: app: price-service
+  ports:
+  - port: 8182
+  selector:
+    app: price-service
