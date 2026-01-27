@@ -220,6 +220,10 @@ deploy_single() {
     else
          echo -e "${YELLOW}Deployment $APP_NAME created.${NC}"
     fi
+
+    # Show status of all pods in the current namespace to confirm visibility
+    echo -e "\n${GREEN}>>> Current Pods in $NAMESPACE:${NC}"
+    kubectl get pods -n $NAMESPACE
 }
 
 deploy_all() {
