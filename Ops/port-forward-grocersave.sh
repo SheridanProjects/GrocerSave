@@ -35,32 +35,32 @@ cleanup() {
 trap cleanup SIGINT
 
 # 1. NGINX (Main Entry Point) -> Changed to 8090
-echo -e "${GREEN}Nginx Proxy:${NC} http://localhost:8090"
-kubectl port-forward -n $NAMESPACE svc/nginx-proxy 8090:80 > /dev/null 2>&1 &
+echo -e "${GREEN}Nginx Proxy:${NC} http://0.0.0.0:8090"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/nginx-proxy 8090:80 > /dev/null 2>&1 &
 
 # 2. Frontend (Direct) -> Changed to 8091
-echo -e "${GREEN}Frontend:${NC}    http://localhost:8091"
-kubectl port-forward -n $NAMESPACE svc/frontend 8091:80 > /dev/null 2>&1 &
+echo -e "${GREEN}Frontend:${NC}    http://0.0.0.0:8091"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/frontend 8091:80 > /dev/null 2>&1 &
 
 # 3. BFF Service
-echo -e "${GREEN}BFF Service:${NC} http://localhost:3100"
-kubectl port-forward -n $NAMESPACE svc/bff-service 3100:3000 > /dev/null 2>&1 &
+echo -e "${GREEN}BFF Service:${NC} http://0.0.0.0:3100"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/bff-service 3100:3000 > /dev/null 2>&1 &
 
 # 4. Auth Service
-echo -e "${GREEN}Auth Service:${NC} http://localhost:8180"
-kubectl port-forward -n $NAMESPACE svc/auth-service 8180:8080 > /dev/null 2>&1 &
+echo -e "${GREEN}Auth Service:${NC} http://0.0.0.0:8180"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/auth-service 8180:8080 > /dev/null 2>&1 &
 
 # 5. Catalog Service
-echo -e "${GREEN}Catalog Svc:${NC}  http://localhost:8181"
-kubectl port-forward -n $NAMESPACE svc/catalog-service 8181:8081 > /dev/null 2>&1 &
+echo -e "${GREEN}Catalog Svc:${NC}  http://0.0.0.0:8181"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/catalog-service 8181:8081 > /dev/null 2>&1 &
 
 # 6. Price Service
-echo -e "${GREEN}Price Service:${NC} http://localhost:8182"
-kubectl port-forward -n $NAMESPACE svc/price-service 8182:8082 > /dev/null 2>&1 &
+echo -e "${GREEN}Price Service:${NC} http://0.0.0.0:8182"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/price-service 8182:8082 > /dev/null 2>&1 &
 
 # 7. RabbitMQ Management UI -> Changed to 15673 to avoid conflict
-echo -e "${GREEN}RabbitMQ UI:${NC}   http://localhost:15673 (user/password)"
-kubectl port-forward -n $NAMESPACE svc/rabbitmq 15673:15672 > /dev/null 2>&1 &
+echo -e "${GREEN}RabbitMQ UI:${NC}   http://0.0.0.0:15673 (user/password)"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/rabbitmq 15673:15672 > /dev/null 2>&1 &
 
 # Keep script running
 wait
