@@ -1,0 +1,143 @@
+name: GrocerSave CI (SAST & Tests)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # ======================================================
+  # 1. SHELL SCRIPT ANALYSIS (Linting the deploy script)
+  # ======================================================
+  shellcheck:
+    name: Lint Deployment Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          # Specifically targeting your deploy script
+          additional_files: 'deploy-grocersave.sh'
+
+  # ======================================================
+  # 2. DOCKERFILE SECURITY SCAN (Trivy)
+  # ======================================================
+  docker-security:
+    name: Scan Dockerfiles (Trivy)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile: 
+          - Services/Dockerfile.frontend
+          - Services/Dockerfile.bff
+          - Services/Dockerfile.backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: ${{ matrix.dockerfile }}
+          exit-code: '1' # Fail the build if critical vulnerabilities are found
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  # ======================================================
+  # 3. STATIC APPLICATION SECURITY TESTING (CodeQL)
+  # ======================================================
+  sast-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Detects languages automatically. Adjust if you use Java/Go/Python exclusively.
+        language: [ 'javascript', 'python' ] 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # ======================================================
+  # 4. UNIT TESTS (Matrix Strategy)
+  # ======================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [shellcheck] # Only run tests if the deploy script lint passes
+    strategy:
+      matrix:
+        service: [frontend, bff-service, auth-service, catalog-service, price-service]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Node.js (Adjust version as needed)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Setup Python (If your backend services are Python)
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # INSTALL DEPENDENCIES
+      # Note: This assumes you have a package.json or requirements.txt in the root or service folders.
+      # You may need to cd into specific directories based on your repo structure.
+      - name: Install Dependencies
+        run: |
+          echo "Installing dependencies for ${{ matrix.service }}..."
+          # Example Logic:
+          if [ -f "package.json" ]; then npm ci; fi
+          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+      # RUN TESTS
+      - name: Run Unit Tests
+        run: |
+          echo "Running tests for ${{ matrix.service }}..."
+          
+          # -----------------------------------------------------------
+          # CUSTOMIZE THIS SECTION BASED ON YOUR LANGUAGE
+          # -----------------------------------------------------------
+          
+          if [[ "${{ matrix.service }}" == "frontend" ]]; then
+             # npm test -- --coverage
+             echo "Simulating Frontend Tests..."
+          
+          elif [[ "${{ matrix.service }}" == "bff-service" ]]; then
+             # npm run test:bff
+             echo "Simulating BFF Tests..."
+          
+          else
+             # Assuming Backend services (auth, catalog, price)
+             # pytest tests/${{ matrix.service }}
+             echo "Simulating Backend Tests for ${{ matrix.service }}..."
+          fi
