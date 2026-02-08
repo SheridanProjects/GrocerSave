@@ -21,18 +21,22 @@ app.get('/health', (req, res) => {
 // --- AUTH PROXY ---
 app.post('/api/auth/signup', async (req, res) => {
   try {
+    console.log(`Proxying signup to ${AUTH_URL}/signup`);
     const response = await axios.post(`${AUTH_URL}/signup`, req.body);
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error('Signup Error:', error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Auth Service Error' });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log(`Proxying login to ${AUTH_URL}/login`);
     const response = await axios.post(`${AUTH_URL}/login`, req.body);
     res.status(response.status).json(response.data);
   } catch (error) {
+    console.error('Login Error:', error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Auth Service Error' });
   }
 });

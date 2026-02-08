@@ -14,12 +14,14 @@ data:
       server {
         listen 80;
         
+        # Proxy /api requests to BFF
         location /api/ {
-          proxy_pass http://bff/;
+          proxy_pass http://bff/api/;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
         }
         
+        # Proxy everything else to Frontend
         location / {
           proxy_pass http://frontend;
           proxy_set_header Host $host;
