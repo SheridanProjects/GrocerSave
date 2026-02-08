@@ -8,14 +8,36 @@ const port = process.env.PORT || 3100;
 app.use(cors());
 app.use(express.json());
 
+// Service URLs (from env or defaults)
 const AUTH_URL = process.env.AUTH_URL || 'http://auth-service:8180';
 const CATALOG_URL = process.env.CATALOG_URL || 'http://catalog-service:8181';
 const PRICE_URL = process.env.PRICE_URL || 'http://price-service:8182';
 
+// --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
   res.json({ status: 'UP', service: 'bff-service' });
 });
 
+// --- AUTH PROXY ---
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const response = await axios.post(`${AUTH_URL}/signup`, req.body);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Auth Service Error' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const response = await axios.post(`${AUTH_URL}/login`, req.body);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Auth Service Error' });
+  }
+});
+
+// --- DEALS AGGREGATION ---
 app.get('/api/deals', async (req, res) => {
   // In a real scenario, this would aggregate data from catalog and price services
   // For now, we return mock data similar to what the frontend expects

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, TrendingDown, Clock, Menu } from 'lucide-react';
+import { ShoppingCart, Search, TrendingDown, Clock, Menu, User, LogIn } from 'lucide-react';
 
 const App = () => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [authData, setAuthData] = useState({ username: '', password: '', email: '' });
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState('');
 
   // Fetch deals from BFF
   useEffect(() => {
@@ -15,20 +20,41 @@ const App = () => {
       })
       .catch(err => {
         console.error("Failed to fetch deals:", err);
-        // Fallback mock data for dev/demo if backend is unreachable
-        const mockDeals = [
-          { id: 1, item: "Organic Milk 2L", store: "SuperStore", price: 4.99, oldPrice: 6.50, drop: "23%" },
-          { id: 2, item: "Free Range Eggs (12)", store: "FreshMart", price: 3.49, oldPrice: 5.00, drop: "30%" },
-          { id: 3, item: "Avocados (Bag of 5)", store: "VeggieCity", price: 2.99, oldPrice: 4.99, drop: "40%" },
-          { id: 4, item: "Sourdough Bread", store: "BakeryBarn", price: 3.25, oldPrice: 4.50, drop: "27%" },
-        ];
-        setDeals(mockDeals);
         setLoading(false);
       });
   }, []);
 
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setError('');
+    const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/signup';
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(authData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+      if (isLoginMode) {
+        setUser(data.uid);
+        localStorage.setItem('token', data.token);
+        setShowLogin(false);
+      } else {
+        setIsLoginMode(true);
+        setError('Account created! Please login.');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 relative">
       {/* Header */}
       <header className="bg-green-600 text-white p-4 shadow-lg sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -36,6 +62,7 @@ const App = () => {
             <ShoppingCart size={28} />
             <h1 className="text-2xl font-bold tracking-tight">GrocerSave</h1>
           </div>
+
           <div className="hidden md:flex bg-green-700 rounded-lg p-2 items-center w-96 border border-green-500">
             <Search size={20} className="text-green-200 mr-2" />
             <input
@@ -44,9 +71,91 @@ const App = () => {
               className="bg-transparent border-none outline-none text-white placeholder-green-200 w-full"
             />
           </div>
-          <Menu className="md:hidden cursor-pointer" />
+
+          <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-2">
+                <User size={20} />
+                <span className="font-medium">{user}</span>
+                <button onClick={() => { setUser(null); localStorage.removeItem('token'); }} className="text-xs bg-green-800 px-2 py-1 rounded">Logout</button>
+              </div>
+            ) : (
+              <button onClick={() => setShowLogin(true)} className="flex items-center gap-1 hover:text-green-100">
+                <LogIn size={20} /> Login
+              </button>
+            )}
+            <Menu className="md:hidden cursor-pointer" />
+          </div>
         </div>
       </header>
+
+      {/* Login Modal */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-6 text-center text-green-700">
+              {isLoginMode ? 'Welcome Back' : 'Create Account'}
+            </h2>
+
+            {error && <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm text-center">{error}</div>}
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Username</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded p-2 mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+                  value={authData.username}
+                  onChange={(e) => setAuthData({...authData, username: e.target.value})}
+                  required
+                />
+              </div>
+
+              {!isLoginMode && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    className="w-full border border-gray-300 rounded p-2 mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+                    value={authData.email}
+                    onChange={(e) => setAuthData({...authData, email: e.target.value})}
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-300 rounded p-2 mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+                  value={authData.password}
+                  onChange={(e) => setAuthData({...authData, password: e.target.value})}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 transition">
+                {isLoginMode ? 'Login' : 'Sign Up'}
+              </button>
+            </form>
+
+            <p className="mt-4 text-center text-sm text-gray-600">
+              {isLoginMode ? "Don't have an account? " : "Already have an account? "}
+              <button
+                onClick={() => { setIsLoginMode(!isLoginMode); setError(''); }}
+                className="text-green-600 font-bold hover:underline"
+              >
+                {isLoginMode ? 'Sign Up' : 'Login'}
+              </button>
+            </p>
+
+            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <div className="bg-green-600 text-white pb-16 pt-8 px-4 text-center">

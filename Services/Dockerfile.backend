@@ -1,10 +1,42 @@
-FROM node:18-alpine
+# Use a multi-stage build for Go services
+FROM golang:1.21-alpine AS builder
 ARG SERVICE_NAME
 WORKDIR /app
-# Assuming the context is the project root, we copy the specific service folder
-COPY Services/${SERVICE_NAME}/package*.json ./
-RUN npm install
+
+# Check if the service is a Go service (auth-service) or Node.js
+# This Dockerfile is now hybrid to support both, or we can split them.
+# Given the user wants to use the provided Go code for auth-service,
+# we need to handle the build differently based on the language.
+
+# COPY everything first to inspect
 COPY Services/${SERVICE_NAME}/ .
-# Expose the new ports
+
+# If go.mod exists, build Go. Else, assume Node.js
+RUN if [ -f go.mod ]; then \
+        go mod tidy && \
+        go build -o /app/service main.go; \
+    else \
+        apk add --no-cache nodejs npm && \
+        npm install; \
+    fi
+
+# Final Stage
+FROM alpine:latest
+ARG SERVICE_NAME
+WORKDIR /app
+
+# Install Node for Node services
+RUN apk add --no-cache nodejs npm
+
+# Copy artifacts
+COPY --from=builder /app /app
+
+# Expose ports
 EXPOSE 8180 8181 8182
-CMD ["node", "index.js"]
+
+# Determine startup command
+CMD if [ -f /app/service ]; then \
+        /app/service; \
+    else \
+        node index.js; \
+    fi
