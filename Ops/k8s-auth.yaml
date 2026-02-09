@@ -14,6 +14,19 @@ spec:
       labels:
         app: auth-service
     spec:
+      # Applying the DNS fix to the auth service for consistency
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 10.100.0.10
+        searches:
+          - grocersave-dev.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+
       containers:
       - name: auth-service
         image: grocersave/auth-service:latest
@@ -31,6 +44,8 @@ spec:
           value: "dev_secret_123"
         - name: POSTGRES_DB
           value: "grocersave_db"
+        - name: REDIS_HOST # Added for completeness
+          value: "redis"
 ---
 apiVersion: v1
 kind: Service
