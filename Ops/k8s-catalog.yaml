@@ -14,19 +14,7 @@ spec:
       labels:
         app: catalog-service
     spec:
-      # Applying the DNS fix to the catalog service as well
-      dnsPolicy: "None"
-      dnsConfig:
-        nameservers:
-          - 10.100.0.10
-        searches:
-          - grocersave-dev.svc.cluster.local
-          - svc.cluster.local
-          - cluster.local
-        options:
-          - name: ndots
-            value: "5"
-
+      # The incorrect dnsConfig has been removed.
       containers:
       - name: catalog-service
         image: grocersave/catalog-service:latest

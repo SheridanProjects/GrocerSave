@@ -14,19 +14,7 @@ spec:
       labels:
         app: price-service
     spec:
-      # Applying the DNS fix to the price service as well
-      dnsPolicy: "None"
-      dnsConfig:
-        nameservers:
-          - 10.100.0.10
-        searches:
-          - grocersave-dev.svc.cluster.local
-          - svc.cluster.local
-          - cluster.local
-        options:
-          - name: ndots
-            value: "5"
-
+      # The incorrect dnsConfig has been removed.
       containers:
       - name: price-service
         image: grocersave/price-service:latest
