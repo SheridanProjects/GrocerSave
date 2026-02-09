@@ -34,21 +34,13 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-# 1. NGINX (Main Entry Point) -> Changed to 8090
-echo -e "${GREEN}Nginx Proxy:${NC} http://0.0.0.0:8090"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/nginx-proxy 8090:80 > /dev/null 2>&1 &
-
-# 2. Frontend (Direct) -> Changed to 8091
-echo -e "${GREEN}Frontend:${NC}    http://0.0.0.0:8091"
+# The ONLY entry point you need. This port works for the UI and all API calls.
+echo -e "${GREEN}GrocerSave App:${NC} http://localhost:8091"
 kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/frontend 8091:80 > /dev/null 2>&1 &
 
-# 3. BFF Service
-echo -e "${GREEN}BFF Service:${NC} http://0.0.0.0:3100"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/bff-service 3100:3000 > /dev/null 2>&1 &
-
-# 4. Auth Service
-echo -e "${GREEN}Auth Service:${NC} http://0.0.0.0:8180"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/auth-service 8180:8080 > /dev/null 2>&1 &
+# Optional: Direct access to BFF for debugging
+echo -e "${YELLOW}BFF Service (Debug):${NC} http://localhost:3100"
+kubectl port-forward -n $NAMESPACE svc/bff-service 3100:3100 > /dev/null 2>&1 &
 
 # 5. Catalog Service
 echo -e "${GREEN}Catalog Svc:${NC}  http://0.0.0.0:8181"

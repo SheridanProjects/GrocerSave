@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, TrendingDown, Clock, X, LogIn, User as UserIcon } from 'lucide-react';
+import { ShoppingCart, Search, TrendingDown, Clock, X, LogIn, User as UserIcon, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import './App.css';
 
-// All API calls will be relative paths.
-// The browser will automatically send them to the same host and port it loaded from.
-// Example: If you access at http://localhost:8090, API calls will go to http://localhost:8090/api/...
-const API_BASE_URL = ''; // Use relative paths
+// All API calls are now simple relative paths.
+// The Nginx server inside the frontend's own container will handle proxying.
+const API_BASE_URL = '';
 
 const App = () => {
   const [deals, setDeals] = useState([]);
@@ -17,7 +16,9 @@ const App = () => {
   const [authData, setAuthData] = useState({ username: '', password: '', email: '' });
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
+  const fetchDeals = () => {
+    setLoading(true);
+    const toastId = toast.loading('Fetching latest deals...');
     fetch(`${API_BASE_URL}/api/deals`)
       .then(res => {
         if (!res.ok) throw new Error('Network response was not ok');
@@ -26,12 +27,18 @@ const App = () => {
       .then(data => {
         setDeals(data);
         setLoading(false);
+        toast.success('Deals updated!', { id: toastId });
       })
       .catch(err => {
         console.error("Failed to fetch deals:", err);
         setLoading(false);
-        toast.error("Could not load deals.");
+        toast.error("Could not load deals.", { id: toastId });
       });
+  };
+
+  // Fetch deals on initial load
+  useEffect(() => {
+    fetchDeals();
   }, []);
 
   const handleAuth = async (e) => {
@@ -126,10 +133,14 @@ const App = () => {
           <div className="section-header">
             <h2>Today's Top Drops</h2>
             <p>The best deals we've found in your area in the last 24 hours.</p>
+            <button onClick={fetchDeals} className="btn btn-accent mt-4">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              Retrieve Latest Data
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {loading ? (
+            {loading && deals.length === 0 ? (
               [1,2,3,4].map(i => <div key={i} className="deal-card h-80 animate-pulse"></div>)
             ) : (
               deals.map((deal, index) => (

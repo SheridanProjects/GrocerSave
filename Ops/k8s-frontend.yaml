@@ -20,7 +20,7 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
-        # No environment variables are needed here anymore
+        # No environment variables are needed. The config is now self-contained.
 ---
 apiVersion: v1
 kind: Service
