@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import './App.css';
 
+// Use an environment variable for the API URL, with a fallback for local development
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8090';
+
 const App = () => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,9 +16,11 @@ const App = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // The frontend will call /api/deals
-    fetch('/api/deals')
-      .then(res => res.json())
+    fetch(`${API_BASE_URL}/api/deals`)
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
       .then(data => {
         setDeals(data);
         setLoading(false);
@@ -29,20 +34,28 @@ const App = () => {
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    // The frontend will call /api/auth/login or /api/auth/signup
     const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/signup';
     const loadingToast = toast.loading(isLoginMode ? 'Signing in...' : 'Creating account...');
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(authData),
       });
 
-      const data = await res.json();
+      if (!res.ok) {
+        // Try to parse error from backend, otherwise use generic message
+        let errorData;
+        try {
+          errorData = await res.json();
+        } catch (jsonError) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        throw new Error(errorData.error || 'Authentication failed');
+      }
 
-      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+      const data = await res.json();
 
       toast.dismiss(loadingToast);
 
@@ -176,7 +189,7 @@ const App = () => {
                 )}
                 <div className="input-group">
                   <label>Password</label>
-                  <input type="password" className="input-field" value={authData.password} onChange={(e) => setAuthData({...authData, password: e.target.value})} required />
+                  <input type="password" className="input-field" value={authData.password} onChange={(e) => setAuthData({...authData, password: e.g.target.value})} required />
                 </div>
                 <button type="submit" className="btn btn-accent w-full justify-center mt-4">
                   {isLoginMode ? 'Sign In' : 'Sign Up'}

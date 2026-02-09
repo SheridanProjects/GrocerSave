@@ -20,6 +20,11 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+        # This is the crucial part. We tell the container where the API is.
+        # In this case, it's the Nginx proxy service.
+        - name: REACT_APP_API_URL
+          value: "http://nginx-proxy:80"
 ---
 apiVersion: v1
 kind: Service
