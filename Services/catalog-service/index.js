@@ -17,22 +17,34 @@ const pool = new Pool({
   port: 5432,
 });
 
-// --- DATABASE INITIALIZATION ---
+// --- DATABASE INITIALIZATION with RETRY LOGIC ---
 const initDb = async () => {
-  try {
-    // You mentioned you already added products, so this table likely exists.
-    // We'll create it just in case for fresh environments.
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS products (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        image_url TEXT
-      );
-    `);
-    console.log("Database 'products' table checked/created successfully.");
-  } catch (err) {
-    console.error("Error initializing database:", err);
+  let retries = 5;
+  while (retries) {
+    try {
+      await pool.connect();
+      console.log("Successfully connected to PostgreSQL.");
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS products (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          image_url TEXT
+        );
+      `);
+      console.log("Database 'products' table checked/created successfully.");
+      break; // Exit loop if successful
+    } catch (err) {
+      console.error("Error initializing database, retrying...", err.message);
+      retries -= 1;
+      if (retries === 0) {
+        console.error("Could not connect to database after multiple retries. Exiting.");
+        process.exit(1); // Exit if we can't connect
+      }
+      // Wait 5 seconds before retrying
+      await new Promise(res => setTimeout(res, 5000));
+    }
   }
 };
 
@@ -53,7 +65,10 @@ app.get('/products', async (req, res) => {
 });
 
 // --- SERVER START ---
-app.listen(port, () => {
-  console.log(`Catalog Service listening on port ${port}`);
-  initDb();
+initDb().then(() => {
+  app.listen(port, () => {
+    console.log(`Catalog Service listening on port ${port}`);
+  });
+}).catch(err => {
+    console.error("Failed to start Catalog Service:", err);
 });

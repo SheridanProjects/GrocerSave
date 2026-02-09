@@ -14,6 +14,23 @@ spec:
       labels:
         app: bff-service
     spec:
+      # This is the crucial fix. We are explicitly telling this pod
+      # how to resolve DNS names within the cluster.
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          # This is the standard address for the CoreDNS service within a Kubernetes cluster.
+          - 10.100.0.10
+        searches:
+          # This tells the pod to automatically search for services in its own namespace
+          # and then in the default cluster domain.
+          - grocersave-dev.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+
       containers:
       - name: bff-service
         image: grocersave/bff-service:latest

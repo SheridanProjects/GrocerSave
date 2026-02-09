@@ -8,10 +8,11 @@ const port = process.env.PORT || 3100;
 app.use(cors());
 app.use(express.json());
 
-// Service URLs using the full Kubernetes DNS names for robustness
-const AUTH_URL = process.env.AUTH_URL || 'http://auth-service.grocersave-dev.svc.cluster.local:8180';
-const CATALOG_URL = process.env.CATALOG_URL || 'http://catalog-service.grocersave-dev.svc.cluster.local:8181';
-const PRICE_URL = process.env.PRICE_URL || 'http://price-service.grocersave-dev.svc.cluster.local:8182';
+// Reverting to short service names. This should work identically in Kubernetes
+// but can be more resilient in some emulated environments.
+const AUTH_URL = process.env.AUTH_URL || 'http://auth-service:8180';
+const CATALOG_URL = process.env.CATALOG_URL || 'http://catalog-service:8181';
+const PRICE_URL = process.env.PRICE_URL || 'http://price-service:8182';
 
 // --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
