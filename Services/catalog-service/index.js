@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
+// It assumes the table has been created manually.
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'grocer_admin',
   host: process.env.DB_HOST || 'postgres',
@@ -17,45 +18,21 @@ const pool = new Pool({
   port: 5432,
 });
 
-// --- DATABASE INITIALIZATION with RETRY LOGIC ---
-const initDb = async () => {
-  let retries = 5;
-  while (retries) {
-    try {
-      await pool.connect();
-      console.log("Successfully connected to PostgreSQL.");
-
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS products (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT,
-          image_url TEXT
-        );
-      `);
-      console.log("Database 'products' table checked/created successfully.");
-      break; // Exit loop if successful
-    } catch (err) {
-      console.error("Error initializing database, retrying...", err.message);
-      retries -= 1;
-      if (retries === 0) {
-        console.error("Could not connect to database after multiple retries. Exiting.");
-        process.exit(1); // Exit if we can't connect
-      }
-      // Wait 5 seconds before retrying
-      await new Promise(res => setTimeout(res, 5000));
-    }
-  }
-};
-
 // --- API ENDPOINTS ---
 app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'catalog-service' });
+  pool.query('SELECT NOW()', (err, result) => {
+    if (err) {
+      res.status(500).json({ status: 'DOWN', error: 'Postgres connection failed' });
+    } else {
+      res.json({ status: 'UP', service: 'catalog-service' });
+    }
+  });
 });
 
 // GET /products - Fetches all products from the database
 app.get('/products', async (req, res) => {
   try {
+    // The query now assumes the 'id' column is of type UUID
     const { rows } = await pool.query('SELECT id, name, description, image_url FROM products');
     res.json(rows);
   } catch (err) {
@@ -65,10 +42,6 @@ app.get('/products', async (req, res) => {
 });
 
 // --- SERVER START ---
-initDb().then(() => {
-  app.listen(port, () => {
-    console.log(`Catalog Service listening on port ${port}`);
-  });
-}).catch(err => {
-    console.error("Failed to start Catalog Service:", err);
+app.listen(port, () => {
+  console.log(`Catalog Service listening on port ${port}`);
 });

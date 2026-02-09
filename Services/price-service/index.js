@@ -9,52 +9,13 @@ app.use(cors());
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
+// The client now connects directly to the correct keyspace.
+// It assumes the keyspace and table have been created manually.
 const client = new cassandra.Client({
   contactPoints: [(process.env.CASSANDRA_HOST || 'cassandra')],
   localDataCenter: 'datacenter1',
+  keyspace: 'price_service'
 });
-
-// --- DATABASE INITIALIZATION with RETRY LOGIC ---
-const initDb = async () => {
-  let retries = 5;
-  while (retries) {
-    try {
-      await client.connect();
-      console.log("Successfully connected to Cassandra.");
-
-      await client.execute(`
-        CREATE KEYSPACE IF NOT EXISTS price_service
-        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
-      `);
-      console.log("Keyspace 'price_service' checked/created successfully.");
-
-      client.keyspace = 'price_service';
-
-      await client.execute(`
-        CREATE TABLE IF NOT EXISTS price_history (
-          product_id INT,
-          store_id uuid,
-          price decimal,
-          is_on_sale boolean,
-          recorded_at timestamp,
-          PRIMARY KEY (product_id, recorded_at)
-        ) WITH CLUSTERING ORDER BY (recorded_at DESC);
-      `);
-      console.log("Cassandra 'price_history' table checked/created successfully with correct schema.");
-
-      return;
-
-    } catch (err) {
-      console.error("Error initializing Cassandra, retrying...", err.message);
-      retries -= 1;
-      if (retries === 0) {
-        console.error("Could not initialize Cassandra after multiple retries. Exiting.");
-        throw err;
-      }
-      await new Promise(res => setTimeout(res, 5000));
-    }
-  }
-};
 
 // --- HELPER FUNCTION ---
 const parseRowPrices = (rows) => {
@@ -62,7 +23,7 @@ const parseRowPrices = (rows) => {
   return rows.map(row => {
     return {
       product_id: row.product_id,
-      store_name: row.store_id.toString(),
+      store_name: row.store_id.toString(), // BFF expects a string for the store name
       price: parseFloat(row.price.toString()),
       timestamp: row.recorded_at
     };
@@ -80,15 +41,10 @@ app.get('/health', (req, res) => {
   });
 });
 
+// This endpoint now correctly expects a UUID string for productId
 app.get('/prices/:productId', async (req, res) => {
-  const productIdParam = req.params.productId;
-  const productId = parseInt(productIdParam, 10);
-
-  // Defensive check: If the productId is not a valid number, return an error.
-  if (isNaN(productId)) {
-    return res.status(400).json({ error: `Invalid product ID provided: ${productIdParam}` });
-  }
-
+  const { productId } = req.params;
+  // No more parseInt. The driver handles UUID strings directly.
   try {
     const query = 'SELECT * FROM price_history WHERE product_id = ?';
     const result = await client.execute(query, [productId], { prepare: true });
@@ -106,8 +62,10 @@ app.get('/prices/latest', async (req, res) => {
 
     const latestPrices = {};
     allPrices.rows.forEach(row => {
-      if (!latestPrices[row.product_id] || row.recorded_at > latestPrices[row.product_id].recorded_at) {
-        latestPrices[row.product_id] = row;
+      // Use the string representation of the UUID as the key
+      const productIdStr = row.product_id.toString();
+      if (!latestPrices[productIdStr] || row.recorded_at > latestPrices[productIdStr].recorded_at) {
+        latestPrices[productIdStr] = row;
       }
     });
 
@@ -119,11 +77,7 @@ app.get('/prices/latest', async (req, res) => {
 });
 
 // --- SERVER START ---
-initDb().then(() => {
-  app.listen(port, () => {
-    console.log(`Price Service listening on port ${port}`);
-  });
-}).catch(err => {
-    console.error("Failed to start Price Service due to DB initialization failure.");
-    process.exit(1);
+// No more initDb(). The server starts immediately.
+app.listen(port, () => {
+  console.log(`Price Service listening on port ${port}`);
 });
