@@ -12,51 +12,82 @@ app.use(express.json());
 const client = new cassandra.Client({
   contactPoints: [(process.env.CASSANDRA_HOST || 'cassandra')],
   localDataCenter: 'datacenter1',
-  keyspace: 'price_service'
 });
 
-// --- DATABASE INITIALIZATION ---
+// --- DATABASE INITIALIZATION with RETRY LOGIC ---
 const initDb = async () => {
-  try {
-    await client.connect();
-    console.log('Connected to Cassandra.');
-    await client.execute(`
-      CREATE KEYSPACE IF NOT EXISTS price_service
-      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
-    `);
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS price_service.price_history (
-        product_id INT,
-        store_name TEXT,
-        price DECIMAL,
-        timestamp TIMESTAMP,
-        PRIMARY KEY (product_id, timestamp)
-      ) WITH CLUSTERING ORDER BY (timestamp DESC);
-    `);
-    console.log("Cassandra 'price_history' table checked/created successfully.");
-  } catch (err) {
-    console.error("Error initializing Cassandra:", err);
+  let retries = 5;
+  while (retries) {
+    try {
+      await client.connect();
+      console.log("Successfully connected to Cassandra.");
+
+      await client.execute(`
+        CREATE KEYSPACE IF NOT EXISTS price_service
+        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
+      `);
+      console.log("Keyspace 'price_service' checked/created successfully.");
+
+      client.keyspace = 'price_service';
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS price_history (
+          product_id uuid,
+          store_id uuid,
+          price decimal,
+          is_on_sale boolean,
+          recorded_at timestamp,
+          PRIMARY KEY (product_id, recorded_at)
+        ) WITH CLUSTERING ORDER BY (recorded_at DESC);
+      `);
+      console.log("Cassandra 'price_history' table checked/created successfully.");
+
+      return;
+
+    } catch (err) {
+      console.error("Error initializing Cassandra, retrying...", err.message);
+      retries -= 1;
+      if (retries === 0) {
+        console.error("Could not initialize Cassandra after multiple retries. Exiting.");
+        throw err;
+      }
+      await new Promise(res => setTimeout(res, 5000));
+    }
   }
 };
 
 // --- HELPER FUNCTION ---
-// Converts the Cassandra Decimal type to a standard JavaScript number
 const parseRowPrices = (rows) => {
-  return rows.map(row => ({
-    ...row,
-    price: parseFloat(row.price.toString())
-  }));
+  if (!rows) return [];
+  return rows.map(row => {
+    // Correctly map the columns from the database to the expected JSON output
+    return {
+      product_id: row.product_id,
+      // The BFF expects store_name, but the DB has store_id. We will send the ID
+      // and eventually, the BFF would look up the name from a (future) store service.
+      // For now, we will alias it to make the data flow work.
+      store_name: row.store_id.toString(), // Sending UUID as a string
+      price: parseFloat(row.price.toString()),
+      timestamp: row.recorded_at
+    };
+  });
 };
 
 // --- API ENDPOINTS ---
 app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'price-service' });
+  client.execute('SELECT now() FROM system.local', (err, result) => {
+    if (err) {
+      res.status(500).json({ status: 'DOWN', error: 'Cassandra connection failed' });
+    } else {
+      res.json({ status: 'UP', service: 'price-service' });
+    }
+  });
 });
 
 app.get('/prices/:productId', async (req, res) => {
   const { productId } = req.params;
   try {
-    const query = 'SELECT store_name, price, timestamp FROM price_service.price_history WHERE product_id = ?';
+    const query = 'SELECT * FROM price_history WHERE product_id = ?';
     const result = await client.execute(query, [productId], { prepare: true });
     res.json(parseRowPrices(result.rows));
   } catch (err) {
@@ -67,12 +98,12 @@ app.get('/prices/:productId', async (req, res) => {
 
 app.get('/prices/latest', async (req, res) => {
   try {
-    const query = 'SELECT product_id, store_name, price, timestamp FROM price_service.price_history';
+    const query = 'SELECT * FROM price_history';
     const allPrices = await client.execute(query);
 
     const latestPrices = {};
     allPrices.rows.forEach(row => {
-      if (!latestPrices[row.product_id] || row.timestamp > latestPrices[row.product_id].timestamp) {
+      if (!latestPrices[row.product_id] || row.recorded_at > latestPrices[row.product_id].recorded_at) {
         latestPrices[row.product_id] = row;
       }
     });
@@ -90,6 +121,6 @@ initDb().then(() => {
     console.log(`Price Service listening on port ${port}`);
   });
 }).catch(err => {
-    console.error("Failed to start Price Service:", err);
+    console.error("Failed to start Price Service due to DB initialization failure.");
     process.exit(1);
 });
