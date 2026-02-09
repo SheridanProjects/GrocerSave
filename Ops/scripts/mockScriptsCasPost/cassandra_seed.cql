@@ -1,49 +1,34 @@
--- Cassandra Seed Data
--- Service: Price Service
--- Context: High-volume write storage for price history
+-- It's often better to let the price-service create the table,
+-- but for manual seeding, you would run this after the table is created.
+-- This script assumes the price_history table has been created with the correct schema:
+-- CREATE TABLE price_service.price_history (
+--   product_id UUID,
+--   store_id UUID,
+--   price DECIMAL,
+--   is_on_sale BOOLEAN,
+--   recorded_at TIMESTAMP,
+--   PRIMARY KEY (product_id, recorded_at)
+-- );
 
--- Create Keyspace
--- Using NetworkTopologyStrategy to match CASSANDRA_DC=datacenter1 from config
-CREATE KEYSPACE IF NOT EXISTS price_service 
-WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1': 1};
-
+-- Use the correct keyspace
 USE price_service;
 
--- Create Table
--- Partition Key: product_id (Groups all history for one product on one node)
--- Clustering Keys: store_id, recorded_at (Orders data within the partition)
-CREATE TABLE IF NOT EXISTS price_history (
-    product_id UUID,
-    store_id UUID,
-    recorded_at TIMESTAMP,
-    price FLOAT,
-    is_on_sale BOOLEAN,
-    PRIMARY KEY ((product_id), store_id, recorded_at)
-) WITH CLUSTERING ORDER BY (store_id ASC, recorded_at DESC);
+-- Clear existing data
+TRUNCATE price_history;
 
--- Insert Prices for the 5 Products (Linked by UUIDs from Postgres)
+-- Insert new price data using the EXACT UUIDs from the PostgreSQL products table
+-- Product: Organic Milk (d02a9637-aa96-48a2-8a21-98c01e2c0490)
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (d02a9637-aa96-48a2-8a21-98c01e2c0490, e4d60c4b-1234-5678-9012-f4d60c4b3333, 4.99, false, toTimestamp(now()));
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (d02a9637-aa96-48a2-8a21-98c01e2c0490, e4d60c4b-1234-5678-9012-f4d60c4b3333, 4.79, true, toTimestamp(now()) - 1d);
 
--- 1. Milk (Regular Price)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-1111-2222-3333-444455556666, e4d60c4b-1234-5678-9012-f4d60c4b3333, toTimestamp(now()), 5.99, false);
+-- Product: Free-Range Eggs (696c8a34-c1b2-4cde-937a-b4ddd95bc649)
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (696c8a34-c1b2-4cde-937a-b4ddd95bc649, e4d60c4b-1234-5678-9012-f4d60c4b3333, 5.49, false, toTimestamp(now()));
 
--- 2. Bread (On Sale!)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-aaaa-bbbb-cccc-ddddeeeeffff, e4d60c4b-1234-5678-9012-f4d60c4b3333, toTimestamp(now()), 3.49, true);
+-- Product: Sourdough Bread (eefae3e5-26d0-470c-8663-fe92cc77d871)
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (eefae3e5-26d0-470c-8663-fe92cc77d871, e4d60c4b-1234-5678-9012-f4d60c4b3333, 3.99, true, toTimestamp(now()));
 
--- 3. Eggs (Regular Price)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-9999-8888-7777-666655554444, e4d60c4b-1234-5678-9012-f4d60c4b3333, toTimestamp(now()), 4.50, false);
+-- Product: Avocados (b7d0ee9d-5289-407f-9ded-89edeb8d7cdf)
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (b7d0ee9d-5289-407f-9ded-89edeb8d7cdf, e4d60c4b-1234-5678-9012-f4d60c4b3333, 6.00, false, toTimestamp(now()));
 
--- 4. Apples (Regular Price)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-cafe-babe-0000-111122223333, e4d60c4b-1234-5678-9012-f4d60c4b3333, toTimestamp(now()), 1.20, false);
-
--- 5. Almond Butter (Regular Price)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-d3ad-beef-aaaa-ccccddddeeee, e4d60c4b-1234-5678-9012-f4d60c4b3333, toTimestamp(now()), 8.99, false);
-
--- Insert a historical record for Milk (Old price from yesterday)
-INSERT INTO price_history (product_id, store_id, recorded_at, price, is_on_sale)
-VALUES (a1b2c3d4-1111-2222-3333-444455556666, e4d60c4b-1234-5678-9012-f4d60c4b3333, '1770513903000', 5.49, false);
-
+-- Product: Chicken Breast (e23b3640-a2c5-4500-b850-4e5bb38de081)
+INSERT INTO price_history (product_id, store_id, price, is_on_sale, recorded_at) VALUES (e23b3640-a2c5-4500-b850-4e5bb38de081, e4d60c4b-1234-5678-9012-f4d60c4b3333, 12.50, false, toTimestamp(now()));
