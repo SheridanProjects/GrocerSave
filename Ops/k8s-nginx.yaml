@@ -14,9 +14,10 @@ data:
       server {
         listen 80;
         
-        # Proxy any request starting with /api/ to the BFF
-        # The path after /api/ is automatically passed.
-        # e.g., /api/auth/login -> http://bff/auth/login
+        # Correctly proxy /api/ requests to the BFF
+        # The trailing slash on proxy_pass is crucial here.
+        # It tells Nginx to replace /api/ with /
+        # Example: /api/auth/login -> http://bff/auth/login
         location /api/ {
           proxy_pass http://bff/;
           proxy_set_header Host $host;
