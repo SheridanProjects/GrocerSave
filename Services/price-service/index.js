@@ -30,7 +30,6 @@ const initDb = async () => {
 
       client.keyspace = 'price_service';
 
-      // CORRECTED SCHEMA: product_id is now INT to match PostgreSQL
       await client.execute(`
         CREATE TABLE IF NOT EXISTS price_history (
           product_id INT,
@@ -81,12 +80,18 @@ app.get('/health', (req, res) => {
   });
 });
 
-// This endpoint now correctly expects an INT for productId
 app.get('/prices/:productId', async (req, res) => {
-  const { productId } = req.params;
+  const productIdParam = req.params.productId;
+  const productId = parseInt(productIdParam, 10);
+
+  // Defensive check: If the productId is not a valid number, return an error.
+  if (isNaN(productId)) {
+    return res.status(400).json({ error: `Invalid product ID provided: ${productIdParam}` });
+  }
+
   try {
     const query = 'SELECT * FROM price_history WHERE product_id = ?';
-    const result = await client.execute(query, [parseInt(productId, 10)], { prepare: true });
+    const result = await client.execute(query, [productId], { prepare: true });
     res.json(parseRowPrices(result.rows));
   } catch (err) {
     console.error(`Error fetching prices for product ${productId}:`, err);
