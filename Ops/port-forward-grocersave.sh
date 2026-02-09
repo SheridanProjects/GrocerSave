@@ -34,25 +34,29 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-# The ONLY entry point you need. This port works for the UI and all API calls.
+# Main App Entry Point (via Frontend's internal proxy)
 echo -e "${GREEN}GrocerSave App:${NC} http://localhost:8091"
 kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/frontend 8091:80 > /dev/null 2>&1 &
 
-# Optional: Direct access to BFF for debugging
+# Main Nginx Proxy (alternative entry point for debugging)
+echo -e "${YELLOW}Nginx Proxy (Debug):${NC} http://localhost:8090"
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/nginx-proxy 8090:80 > /dev/null 2>&1 &
+
+# Direct access to services for debugging
 echo -e "${YELLOW}BFF Service (Debug):${NC} http://localhost:3100"
 kubectl port-forward -n $NAMESPACE svc/bff-service 3100:3100 > /dev/null 2>&1 &
 
-# 5. Catalog Service
-echo -e "${GREEN}Catalog Svc:${NC}  http://0.0.0.0:8181"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/catalog-service 8181:8081 > /dev/null 2>&1 &
+echo -e "${YELLOW}Auth Service (Debug):${NC} http://localhost:8180"
+kubectl port-forward -n $NAMESPACE svc/auth-service 8180:8180 > /dev/null 2>&1 &
 
-# 6. Price Service
-echo -e "${GREEN}Price Service:${NC} http://0.0.0.0:8182"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/price-service 8182:8082 > /dev/null 2>&1 &
+echo -e "${YELLOW}Catalog Svc (Debug):${NC} http://localhost:8181"
+kubectl port-forward -n $NAMESPACE svc/catalog-service 8181:8181 > /dev/null 2>&1 &
 
-# 7. RabbitMQ Management UI -> Changed to 15673 to avoid conflict
-echo -e "${GREEN}RabbitMQ UI:${NC}   http://0.0.0.0:15673 (user/password)"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/rabbitmq 15673:15672 > /dev/null 2>&1 &
+echo -e "${YELLOW}Price Service (Debug):${NC} http://localhost:8182"
+kubectl port-forward -n $NAMESPACE svc/price-service 8182:8182 > /dev/null 2>&1 &
+
+echo -e "${YELLOW}RabbitMQ UI (Debug):${NC} http://localhost:15673 (user/password)"
+kubectl port-forward -n $NAMESPACE svc/rabbitmq 15673:15672 > /dev/null 2>&1 &
 
 # Keep script running
 wait
