@@ -11,23 +11,19 @@ app.use(express.json());
 // --- DATABASE CONNECTION ---
 const client = new cassandra.Client({
   contactPoints: [(process.env.CASSANDRA_HOST || 'cassandra')],
-  localDataCenter: 'datacenter1', // As defined in k8s-cassandra.yaml
-  keyspace: 'price_service' // CORRECTED KEYSPACE
+  localDataCenter: 'datacenter1',
+  keyspace: 'price_service'
 });
 
 // --- DATABASE INITIALIZATION ---
 const initDb = async () => {
   try {
-    // Connect and create keyspace/table if they don't exist
     await client.connect();
     console.log('Connected to Cassandra.');
-
     await client.execute(`
       CREATE KEYSPACE IF NOT EXISTS price_service
       WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
     `);
-
-    // CORRECTED TABLE NAME to price_history
     await client.execute(`
       CREATE TABLE IF NOT EXISTS price_service.price_history (
         product_id INT,
@@ -43,25 +39,32 @@ const initDb = async () => {
   }
 };
 
+// --- HELPER FUNCTION ---
+// Converts the Cassandra Decimal type to a standard JavaScript number
+const parseRowPrices = (rows) => {
+  return rows.map(row => ({
+    ...row,
+    price: parseFloat(row.price.toString())
+  }));
+};
+
 // --- API ENDPOINTS ---
 app.get('/health', (req, res) => {
   res.json({ status: 'UP', service: 'price-service' });
 });
 
-// GET /prices/:productId - Fetches all prices for a given product
 app.get('/prices/:productId', async (req, res) => {
   const { productId } = req.params;
   try {
     const query = 'SELECT store_name, price, timestamp FROM price_service.price_history WHERE product_id = ?';
     const result = await client.execute(query, [productId], { prepare: true });
-    res.json(result.rows);
+    res.json(parseRowPrices(result.rows));
   } catch (err) {
     console.error(`Error fetching prices for product ${productId}:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// GET /prices/latest - Fetches the latest price for all products
 app.get('/prices/latest', async (req, res) => {
   try {
     const query = 'SELECT product_id, store_name, price, timestamp FROM price_service.price_history';
@@ -74,13 +77,12 @@ app.get('/prices/latest', async (req, res) => {
       }
     });
 
-    res.json(Object.values(latestPrices));
+    res.json(parseRowPrices(Object.values(latestPrices)));
   } catch (err) {
     console.error("Error fetching latest prices:", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 // --- SERVER START ---
 initDb().then(() => {

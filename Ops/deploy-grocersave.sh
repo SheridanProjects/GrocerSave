@@ -138,6 +138,10 @@ check_k8s() {
          echo -e "${RED}Failed to connect to K8s.${NC}"
          exit 1
     fi
+
+    # Allow pods to run on the control-plane node for local development
+    echo -e "${YELLOW}Untainting control-plane node...${NC}"
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane- > /dev/null 2>&1 || true
 }
 
 # ==========================================
