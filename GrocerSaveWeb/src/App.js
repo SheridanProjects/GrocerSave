@@ -13,6 +13,7 @@ const App = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // The frontend will call /api/deals
     fetch('/api/deals')
       .then(res => res.json())
       .then(data => {
@@ -28,6 +29,7 @@ const App = () => {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    // The frontend will call /api/auth/login or /api/auth/signup
     const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/signup';
     const loadingToast = toast.loading(isLoginMode ? 'Signing in...' : 'Creating account...');
 

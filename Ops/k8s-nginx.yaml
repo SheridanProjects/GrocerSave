@@ -14,11 +14,15 @@ data:
       server {
         listen 80;
         
-        # Proxy /api requests to BFF
+        # Proxy any request starting with /api/ to the BFF
+        # The path after /api/ is automatically passed.
+        # e.g., /api/auth/login -> http://bff/auth/login
         location /api/ {
-          proxy_pass http://bff/api/;
+          proxy_pass http://bff/;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
         }
         
         # Proxy everything else to Frontend

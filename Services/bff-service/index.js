@@ -19,7 +19,8 @@ app.get('/health', (req, res) => {
 });
 
 // --- AUTH PROXY ---
-app.post('/api/auth/signup', async (req, res) => {
+// Listens on /auth/signup and proxies to the auth service
+app.post('/auth/signup', async (req, res) => {
   try {
     console.log(`Proxying signup to ${AUTH_URL}/signup`);
     const response = await axios.post(`${AUTH_URL}/signup`, req.body);
@@ -30,7 +31,8 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+// Listens on /auth/login and proxies to the auth service
+app.post('/auth/login', async (req, res) => {
   try {
     console.log(`Proxying login to ${AUTH_URL}/login`);
     const response = await axios.post(`${AUTH_URL}/login`, req.body);
@@ -42,7 +44,8 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- DEALS AGGREGATION ---
-app.get('/api/deals', async (req, res) => {
+// Listens on /deals
+app.get('/deals', async (req, res) => {
   // In a real scenario, this would aggregate data from catalog and price services
   // For now, we return mock data similar to what the frontend expects
   const mockDeals = [
