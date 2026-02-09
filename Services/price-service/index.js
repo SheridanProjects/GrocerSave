@@ -30,9 +30,10 @@ const initDb = async () => {
 
       client.keyspace = 'price_service';
 
+      // CORRECTED SCHEMA: product_id is now INT to match PostgreSQL
       await client.execute(`
         CREATE TABLE IF NOT EXISTS price_history (
-          product_id uuid,
+          product_id INT,
           store_id uuid,
           price decimal,
           is_on_sale boolean,
@@ -40,7 +41,7 @@ const initDb = async () => {
           PRIMARY KEY (product_id, recorded_at)
         ) WITH CLUSTERING ORDER BY (recorded_at DESC);
       `);
-      console.log("Cassandra 'price_history' table checked/created successfully.");
+      console.log("Cassandra 'price_history' table checked/created successfully with correct schema.");
 
       return;
 
@@ -60,13 +61,9 @@ const initDb = async () => {
 const parseRowPrices = (rows) => {
   if (!rows) return [];
   return rows.map(row => {
-    // Correctly map the columns from the database to the expected JSON output
     return {
       product_id: row.product_id,
-      // The BFF expects store_name, but the DB has store_id. We will send the ID
-      // and eventually, the BFF would look up the name from a (future) store service.
-      // For now, we will alias it to make the data flow work.
-      store_name: row.store_id.toString(), // Sending UUID as a string
+      store_name: row.store_id.toString(),
       price: parseFloat(row.price.toString()),
       timestamp: row.recorded_at
     };
@@ -84,11 +81,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+// This endpoint now correctly expects an INT for productId
 app.get('/prices/:productId', async (req, res) => {
   const { productId } = req.params;
   try {
     const query = 'SELECT * FROM price_history WHERE product_id = ?';
-    const result = await client.execute(query, [productId], { prepare: true });
+    const result = await client.execute(query, [parseInt(productId, 10)], { prepare: true });
     res.json(parseRowPrices(result.rows));
   } catch (err) {
     console.error(`Error fetching prices for product ${productId}:`, err);
