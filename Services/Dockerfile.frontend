@@ -1,23 +1,15 @@
+# Stage 1: Build the React app
 FROM node:18-alpine as build
 WORKDIR /app
 COPY GrocerSaveWeb/package*.json ./
 RUN npm install
 COPY GrocerSaveWeb/ .
-# The build script will automatically use .env files
 RUN npm run build
 
-# Use a more robust Nginx setup that can handle environment variables
+# Stage 2: Serve the static files with a plain Nginx
 FROM nginx:alpine
-# Install envsubst
-RUN apk add --no-cache gettext
-
-# Copy the built app
+# Copy the built static files from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
-
-# Copy a template for the Nginx config
-COPY GrocerSaveWeb/nginx.conf.template /etc/nginx/templates/default.conf.template
-
-# When the container starts, it will substitute the env var and start nginx
-CMD ["/bin/sh", "-c", "envsubst '$REACT_APP_API_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
-
+# Nginx will automatically serve index.html for any directory requests
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

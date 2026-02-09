@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import './App.css';
 
-// Use an environment variable for the API URL, with a fallback for local development
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8090';
+// All API calls will be relative paths.
+// The browser will automatically send them to the same host and port it loaded from.
+// Example: If you access at http://localhost:8090, API calls will go to http://localhost:8090/api/...
+const API_BASE_URL = ''; // Use relative paths
 
 const App = () => {
   const [deals, setDeals] = useState([]);
@@ -45,7 +47,6 @@ const App = () => {
       });
 
       if (!res.ok) {
-        // Try to parse error from backend, otherwise use generic message
         let errorData;
         try {
           errorData = await res.json();
@@ -189,7 +190,7 @@ const App = () => {
                 )}
                 <div className="input-group">
                   <label>Password</label>
-                  <input type="password" className="input-field" value={authData.password} onChange={(e) => setAuthData({...authData, password: e.g.target.value})} required />
+                  <input type="password" className="input-field" value={authData.password} onChange={(e) => setAuthData({...authData, password: e.target.value})} required />
                 </div>
                 <button type="submit" className="btn btn-accent w-full justify-center mt-4">
                   {isLoginMode ? 'Sign In' : 'Sign Up'}
