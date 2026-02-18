@@ -1,0 +1,31 @@
+services:
+  localstack:
+    container_name: localstack-main
+    image: localstack/localstack-pro
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      # --- AUTH ---
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+
+      # --- CRITICAL CONFIG ---
+      - DEBUG=1
+      - PERSISTENCE=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - EKS_LOADBALANCER_PORT=8080
+      - K8S_PROVIDER=k3d
+
+      # --- ENABLE EVERYTHING ---
+      - SERVICES=kubernetes,account,acm,acm-pca,amplify,apigateway,apigatewaymanagementapi,apigatewayv2,appconfig,appconfigdata,application-autoscaling,appsync,athena,autoscaling,backup,batch,bedrock,bedrock-runtime,ce,cloudcontrol,cloudformation,cloudfront,cloudtrail,cloudwatch,codeartifact,codebuild,codecommit,codeconnections,codedeploy,codepipeline,codestar-connections,cognito-identity,cognito-idp,config,dms,docdb,dynamodb,dynamodbstreams,ec2,ecr,ecs,efs,eks,eks-auth,elasticache,elasticbeanstalk,elb,elbv2,emr,emr-serverless,es,events,firehose,fis,glacier,glue,iam,identitystore,iot,iot-data,iotwireless,kafka,kinesis,kinesisanalyticsv2,kms,lakeformation,lambda,logs,managedblockchain,mediaconvert,memorydb,mq,mwaa,neptune,opensearch,organizations,pinpoint,pipes,ram,rds,rds-data,redshift,redshift-data,resource-groups,resourcegroupstaggingapi,route53,route53resolver,s3,s3control,s3tables,sagemaker,sagemaker-runtime,scheduler,secretsmanager,serverlessrepo,servicediscovery,ses,sesv2,shield,sns,sqs,sso-admin,ssm,stepfunctions,sts,support,swf,textract,timestream-query,timestream-write,transcribe,transfer,verifiedpermissions,wafv2,xray
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./volume:/var/lib/localstack"
+
+    networks:
+      - default
+
+networks:
+  default:
+    name: localstack-net
