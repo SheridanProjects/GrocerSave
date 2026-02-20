@@ -14,12 +14,12 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Ensure we are on the right cluster
-CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null)
-EXPECTED_CONTEXT="arn:aws:eks:us-east-1:000000000000:cluster/$CLUSTER_NAME"
+#CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null)
+#EXPECTED_CONTEXT="arn:aws:eks:us-east-1:000000000000:cluster/$CLUSTER_NAME"
 
 if [ "$CURRENT_CONTEXT" != "$EXPECTED_CONTEXT" ]; then
      echo -e "${YELLOW}Switching context to $CLUSTER_NAME...${NC}"
-     awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
+     #awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
 fi
 
 echo -e "${GREEN}Starting Port Forwarding for GrocerSave Services...${NC}"
