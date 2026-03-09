@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+</head>
+<body>
+    <header>
+        <h1>Inventory</h1> 
+        <h2>List: <strong>{{ content }}</strong></h2>
+    </header>
+    <a href="{{ url_for('enter_data') }}">Enter Another Grocery Item</a><br>
+    <a href="{{ url_for('userMain') }}">Return to Main Page</a>
+</body>
+</html>

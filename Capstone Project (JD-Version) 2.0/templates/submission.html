@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Confirmation</title>
+</head>
+<body>
+    <h1>Submission Successful!</h1>
+    <p>Your grocery data has been entered successfully.</p>
+    <a href="{{ url_for('enter_data') }}">Enter Another Grocery Item</a><br>
+    <a href="{{ url_for('view_inventory') }}">View Inventory</a><br>
+    <a href="{{ url_for('userMain') }}">Return to Main Page</a>
+</body>
+</html>
