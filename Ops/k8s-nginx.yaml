@@ -47,8 +47,6 @@ spec:
       app: nginx-proxy
   template:
     metadata:
-      annotations:
-        checksum/config: "CONFIG_CHECKSUM"
       labels:
         app: nginx-proxy
     spec:
