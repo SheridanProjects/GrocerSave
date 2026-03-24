@@ -133,8 +133,7 @@ check_k8s() {
 
     echo -e "${YELLOW}Configuring kubectl...${NC}"
     awslocal eks update-kubeconfig --name "$CLUSTER_NAME"
-    my_home=$HOME
-    awk -v home="$my_home" '/command:/ {$0="    command: " home "/.local/bin/awslocal"} {print}' ~/.kube/config > ~/.kube/config.tmp && mv ~/.kube/config.tmp ~/.kube/config
+    sed -i "s|command: aws|command: ${HOME}/.local/bin/awslocal|g" ~/.kube/config
 
     if ! kubectl get nodes > /dev/null 2>&1; then
          echo -e "${RED}Failed to connect to K8s.${NC}"
