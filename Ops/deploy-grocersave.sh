@@ -171,8 +171,8 @@ deploy_service() {
 
     # Specific Dockerfile logic
     if [ "$SERVICE_NAME" == "frontend" ]; then
-        DOCKERFILE="$PROJECT_ROOT/GrocerSave-Python-Frontend/Dockerfile"
-        BUILD_CONTEXT="$PROJECT_ROOT/GrocerSave-Python-Frontend"
+        DOCKERFILE="$PROJECT_ROOT/Frontend/Dockerfile"
+        BUILD_CONTEXT="$PROJECT_ROOT/Frontend"
         BUILD_ARG_NAME="" # No build arg needed for the new frontend
     elif [ "$SERVICE_NAME" == "bff-service" ]; then
         DOCKERFILE="$PROJECT_ROOT/Services/Dockerfile.bff"
