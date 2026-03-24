@@ -6,8 +6,8 @@ app.secret_key = 'a_secure_random_secret_key'  # Replace with a real secret key
 
 # Configuration for backend services
 # These URLs will likely need to be updated based on your service discovery/k8s setup.
-AUTH_SERVICE_URL = "http://auth-service:8180"
-CATALOG_SERVICE_URL = "http://catalog-service:8181"
+AUTH_SERVICE_URL = "http://auth-service:8080"
+CATALOG_SERVICE_URL = "http://catalog-service:8080"
 
 @app.route('/')
 def home():
@@ -89,4 +89,4 @@ def logout():
 
 if __name__ == '__main__':
     # Use host='0.0.0.0' to be accessible from outside the container
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

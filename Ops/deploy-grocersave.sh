@@ -89,7 +89,7 @@ setup_network() {
         echo "  Creating Security Group..."
         SG_ID=$(awslocal ec2 create-security-group --group-name $PROJECT_NAME-sg --description "$PROJECT_NAME SG" --vpc-id $VPC_ID --query 'GroupId' --output text)
         # Allow standard ports
-        for PORT in 80 443 3100 8180 8181 8182; do
+        for PORT in 80 443 3100 8180 8181 8182 5000; do
             awslocal ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port $PORT --cidr 0.0.0.0/0 > /dev/null
         done
     else
