@@ -22,9 +22,15 @@ spec:
         - containerPort: 15672 # UI port
         env:
         - name: RABBITMQ_DEFAULT_USER
-          value: "user"
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-creds
+              key: RABBITMQ_DEFAULT_USER
         - name: RABBITMQ_DEFAULT_PASS
-          value: "password"
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-creds
+              key: RABBITMQ_DEFAULT_PASS
 ---
 apiVersion: v1
 kind: Service

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div>
+        <h1>Save Big on <span class="highlight">Every</span> Grocery Trip.</h1>
+        <p>We track prices across local stores in real-time so you never miss a deal. Start saving today!</p>
+        <div class="flex justify-center gap-4">
+            <a href="#deals" class="btn btn-accent"><i data-lucide="search"></i> Find Deals</a>
+            <button class="btn btn-primary">Learn More</button>
+        </div>
+    </div>
+</section>
+
+<section id="deals" class="deals-section">
+    <div class="section-header">
+        <h2>Today's Top Drops</h2>
+        <p>The best deals we've found in your area in the last 24 hours.</p>
+        <a href="{{ url_for('home') }}" class="btn btn-accent mt-4">
+            <i data-lucide="refresh-cw"></i> Retrieve Latest Data
+        </a>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {% if deals %}
+            {% for deal in deals %}
+            <div class="deal-card">
+                <div class="deal-card-image">
+                    <div class="deal-card-drop">
+                        {% if deal.oldPrice and deal.price %}
+                            -{{ "%.0f"|format(((deal.oldPrice - deal.price) / deal.oldPrice * 100)) }}%
+                        {% else %}
+                            NEW
+                        {% endif %}
+                    </div>
+                    <i data-lucide="shopping-cart"></i>
+                </div>
+                <div class="deal-card-content">
+                    <h4>{{ deal.item }}</h4>
+                    <div class="deal-card-store">
+                        <i data-lucide="clock"></i> {{ deal.store }}
+                    </div>
+                    <div class="price-container">
+                        <span class="current-price">${{ "%.2f"|format(deal.price) }}</span>
+                        {% if deal.oldPrice %}
+                        <span class="old-price">${{ "%.2f"|format(deal.oldPrice) }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            {% if not error %}
+            <p>No deals available at the moment. Please check back later.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

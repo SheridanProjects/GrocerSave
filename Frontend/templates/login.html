@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal-overlay" style="display: flex; justify-content: center; align-items: center; padding-top: 5rem;">
+    <div class="modal-content">
+        <h2>{% if is_login_mode %}Welcome Back{% else %}Create Account{% endif %}</h2>
+        <form method="POST" action="{{ url_for('login') if is_login_mode else url_for('signup') }}">
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" class="input-field" required>
+            </div>
+            {% if not is_login_mode %}
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" class="input-field" required>
+            </div>
+            {% endif %}
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" class="input-field" required>
+            </div>
+            <button type="submit" class="btn btn-accent w-full justify-center mt-4">
+                {% if is_login_mode %}Sign In{% else %}Sign Up{% endif %}
+            </button>
+        </form>
+        <p class="text-center text-sm mt-6">
+            {% if is_login_mode %}
+                Don't have an account? <a href="{{ url_for('signup') }}" class="font-semibold text-emerald-600 hover:underline">Sign Up</a>
+            {% else %}
+                Already have an account? <a href="{{ url_for('login') }}" class="font-semibold text-emerald-600 hover:underline">Log In</a>
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endblock %}

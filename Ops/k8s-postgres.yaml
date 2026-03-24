@@ -18,11 +18,20 @@ spec:
         image: postgres:15-alpine
         env:
         - name: POSTGRES_USER
-          value: "grocer_admin"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: POSTGRES_USER
         - name: POSTGRES_PASSWORD
-          value: "dev_secret_123"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: POSTGRES_PASSWORD
         - name: POSTGRES_DB
-          value: "grocersave_db"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: POSTGRES_DB
         ports:
         - containerPort: 5432
 ---

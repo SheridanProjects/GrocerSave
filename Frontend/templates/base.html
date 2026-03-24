@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrocerSave</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.263.1/dist/lucide-react.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="navbar">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-20">
+                <div class="navbar-logo">
+                    <div class="icon-wrapper">
+                        <i data-lucide="shopping-cart"></i>
+                    </div>
+                    <h1>Grocer<span>Save</span></h1>
+                </div>
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="{{ url_for('home') }}" class="nav-link">Deals</a>
+                    <a href="#" class="nav-link">Stores</a>
+                    <a href="#" class="nav-link">About</a>
+                </div>
+                <div class="flex items-center gap-4">
+                    {% if user %}
+                        <div class="flex items-center gap-2 font-semibold">
+                            <i data-lucide="user"></i> {{ user }}
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="btn btn-primary">
+                            <i data-lucide="log-out"></i> Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">
+                            <i data-lucide="log-in"></i> Sign In
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

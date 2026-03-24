@@ -89,7 +89,7 @@ setup_network() {
         echo "  Creating Security Group..."
         SG_ID=$(awslocal ec2 create-security-group --group-name $PROJECT_NAME-sg --description "$PROJECT_NAME SG" --vpc-id $VPC_ID --query 'GroupId' --output text)
         # Allow standard ports
-        for PORT in 80 443 3100 8180 8181 8182; do
+        for PORT in 80 443 3100 8180 8181 8182 5000; do
             awslocal ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port $PORT --cidr 0.0.0.0/0 > /dev/null
         done
     else
@@ -166,21 +166,32 @@ deploy_service() {
 
     # Determine Dockerfile & Build Context
     DOCKERFILE="$PROJECT_ROOT/Services/Dockerfile.backend"
+    BUILD_CONTEXT="$PROJECT_ROOT"
     BUILD_ARG_NAME=$SERVICE_NAME
 
     # Specific Dockerfile logic
     if [ "$SERVICE_NAME" == "frontend" ]; then
-        DOCKERFILE="$PROJECT_ROOT/Services/Dockerfile.frontend"
+        DOCKERFILE="$PROJECT_ROOT/GrocerSave-Python-Frontend/Dockerfile"
+        BUILD_CONTEXT="$PROJECT_ROOT/GrocerSave-Python-Frontend"
+        BUILD_ARG_NAME="" # No build arg needed for the new frontend
     elif [ "$SERVICE_NAME" == "bff-service" ]; then
         DOCKERFILE="$PROJECT_ROOT/Services/Dockerfile.bff"
     fi
 
     echo "  Building Image..."
     # Build image and check for failure
-    if ! docker build -t "$REPO_NAME:latest" -f "$DOCKERFILE" --build-arg SERVICE_NAME=$BUILD_ARG_NAME "$PROJECT_ROOT"; then
-        echo -e "${RED}Build failed for $SERVICE_NAME${NC}"
-        exit 1
+    if [ -n "$BUILD_ARG_NAME" ]; then
+        if ! docker build -t "$REPO_NAME:latest" -f "$DOCKERFILE" --build-arg SERVICE_NAME=$BUILD_ARG_NAME "$BUILD_CONTEXT"; then
+            echo -e "${RED}Build failed for $SERVICE_NAME${NC}"
+            exit 1
+        fi
+    else
+        if ! docker build -t "$REPO_NAME:latest" -f "$DOCKERFILE" "$BUILD_CONTEXT"; then
+            echo -e "${RED}Build failed for $SERVICE_NAME${NC}"
+            exit 1
+        fi
     fi
+
 
     FULL_TAG="$ECR_ROOT/$REPO_NAME:latest"
     docker tag "$REPO_NAME:latest" "$FULL_TAG"
