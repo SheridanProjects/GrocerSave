@@ -5,20 +5,19 @@ app = Flask(__name__)
 app.secret_key = 'a_secure_random_secret_key'  # Replace with a real secret key
 
 # Configuration for backend services
-# These URLs will likely need to be updated based on your service discovery/k8s setup.
-AUTH_SERVICE_URL = "http://auth-service:8180"
-CATALOG_SERVICE_URL = "http://catalog-service:8181"
+# All API calls are routed through the NGINX proxy, which forwards them to the BFF.
+BFF_API_URL = "http://nginx-proxy:80/api"
 
 @app.route('/')
 def home():
     """
-    Renders the home page, fetching deals from the catalog service.
+    Renders the home page, fetching deals from the catalog service via the BFF.
     """
     deals = []
     error = None
     try:
         # Fetch deals from the catalog service
-        response = requests.get(f"{CATALOG_SERVICE_URL}/api/deals")
+        response = requests.get(f"{BFF_API_URL}/deals")
         response.raise_for_status()  # Raise an exception for bad status codes
         deals = response.json()
     except requests.exceptions.RequestException as e:
@@ -30,14 +29,14 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """
-    Handles user login.
+    Handles user login by calling the auth service via the BFF.
     """
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
         try:
-            response = requests.post(f"{AUTH_SERVICE_URL}/api/auth/login", json={'username': username, 'password': password})
+            response = requests.post(f"{BFF_API_URL}/auth/login", json={'username': username, 'password': password})
             
             if response.ok:
                 data = response.json()
@@ -56,7 +55,7 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """
-    Handles user registration.
+    Handles user registration by calling the auth service via the BFF.
     """
     if request.method == 'POST':
         username = request.form['username']
@@ -64,7 +63,7 @@ def signup():
         email = request.form['email']
         
         try:
-            response = requests.post(f"{AUTH_SERVICE_URL}/api/auth/signup", json={'username': username, 'password': password, 'email': email})
+            response = requests.post(f"{BFF_API_URL}/auth/signup", json={'username': username, 'password': password, 'email': email})
 
             if response.status_code == 201:
                 flash('Account created successfully! Please log in.', 'success')
