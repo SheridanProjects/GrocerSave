@@ -235,7 +235,15 @@ deploy_single() {
     ECR_ROOT="000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud:4566"
 
     echo -e "\n${YELLOW}>>> Applying $MANIFEST...${NC}"
-    sed "s|image: grocersave/|image: $ECR_ROOT/grocersave-|g" "$SCRIPT_DIR/$MANIFEST" > "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+
+    # Special handling for nginx to force rollout on config change
+    if [ "$APP_NAME" == "nginx-proxy" ]; then
+        CHECKSUM=$(kubectl get configmap nginx-conf -n $NAMESPACE -o yaml | sha256sum | awk '{print $1}')
+        sed "s|image: grocersave/|image: $ECR_ROOT/grocersave-|g; s|CONFIG_CHECKSUM|$CHECKSUM|g" "$SCRIPT_DIR/$MANIFEST" > "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+    else
+        sed "s|image: grocersave/|image: $ECR_ROOT/grocersave-|g" "$SCRIPT_DIR/$MANIFEST" > "$SCRIPT_DIR/$MANIFEST.gen.yaml"
+    fi
+
     kubectl apply -f "$SCRIPT_DIR/$MANIFEST.gen.yaml"
     rm "$SCRIPT_DIR/$MANIFEST.gen.yaml"
 

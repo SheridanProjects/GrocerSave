@@ -6,8 +6,8 @@ app.secret_key = 'a_secure_random_secret_key'  # Replace with a real secret key
 
 # Configuration for backend services
 # These URLs will likely need to be updated based on your service discovery/k8s setup.
-AUTH_SERVICE_URL = "http://auth-service:8080"
-CATALOG_SERVICE_URL = "http://catalog-service:8080"
+AUTH_SERVICE_URL = "http://auth-service:8180"
+CATALOG_SERVICE_URL = "http://catalog-service:8181"
 
 @app.route('/')
 def home():

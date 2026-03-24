@@ -9,7 +9,7 @@ data:
     events { worker_connections 1024; }
     http {
       upstream bff { server bff-service:3100; }
-      upstream frontend { server frontend:80; }
+      upstream frontend { server frontend:5000; }
       
       server {
         listen 80;
@@ -47,6 +47,8 @@ spec:
       app: nginx-proxy
   template:
     metadata:
+      annotations:
+        checksum/config: "CONFIG_CHECKSUM"
       labels:
         app: nginx-proxy
     spec:
