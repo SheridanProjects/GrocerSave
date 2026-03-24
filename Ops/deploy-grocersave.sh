@@ -89,7 +89,7 @@ setup_network() {
         echo "  Creating Security Group..."
         SG_ID=$(awslocal ec2 create-security-group --group-name $PROJECT_NAME-sg --description "$PROJECT_NAME SG" --vpc-id $VPC_ID --query 'GroupId' --output text)
         # Allow standard ports
-        for PORT in 80 443 3100 8180 8181 8182 5000; do
+        for PORT in 80 443 3100 8180 8181 8182; do
             awslocal ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port $PORT --cidr 0.0.0.0/0 > /dev/null
         done
     else
@@ -259,6 +259,11 @@ deploy_all() {
 
     # Apply Namespace first
     kubectl apply -f "$SCRIPT_DIR/k8s-namespace.yaml"
+
+    # Seed Secrets
+    echo -e "\n${YELLOW}>>> Seeding Kubernetes Secrets...${NC}"
+    kubectl create secret generic postgres-creds --from-literal=POSTGRES_USER=postgres --from-literal=POSTGRES_PASSWORD=postgres --from-literal=POSTGRES_DB=grocersave -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create secret generic rabbitmq-creds --from-literal=RABBITMQ_DEFAULT_USER=guest --from-literal=RABBITMQ_DEFAULT_PASS=guest -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
     # List of platform manifests
     PLATFORM_MANIFESTS=("k8s-redis.yaml" "k8s-postgres.yaml" "k8s-rabbitmq.yaml" "k8s-cassandra.yaml" "k8s-elasticsearch.yaml")
