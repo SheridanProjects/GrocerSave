@@ -5,33 +5,31 @@ metadata:
   name: nginx-conf
   namespace: grocersave-dev
 data:
-  nginx.conf: |
-    events { worker_connections 1024; }
-    http {
-      upstream bff_backend { server bff-service:3100; }
-      upstream frontend { server frontend:5000; }
+  grocersave.conf: |
+    upstream bff_backend { 
+      server bff-service:3100; 
+    }
+    upstream frontend { 
+      server frontend:5000; 
+    }
+    
+    server {
+      listen 80;
       
-      server {
-        listen 80;
-        
-        # Correctly proxy /api/ requests to the BFF
-        # The trailing slash on proxy_pass is crucial here.
-        # It tells Nginx to replace /api/ with /
-        # Example: /api/auth/login -> http://bff/auth/login
-        location /api/ {
-          proxy_pass http://bff_backend/;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-        }
-        
-        # Proxy everything else to Frontend
-        location / {
-          proxy_pass http://frontend;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-        }
+      location /api/ {
+        proxy_pass http://bff_backend/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+      
+      location / {
+        proxy_pass http://frontend/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
       }
     }
 ---
@@ -57,8 +55,8 @@ spec:
         - containerPort: 80
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/nginx/nginx.conf
-          subPath: nginx.conf
+          mountPath: /etc/nginx/conf.d/grocersave.conf
+          subPath: grocersave.conf
       volumes:
       - name: config-volume
         configMap:
