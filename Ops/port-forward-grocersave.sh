@@ -36,7 +36,7 @@ trap cleanup SIGINT
 
 # Main App Entry Point (via Frontend's internal proxy)
 echo -e "${GREEN}GrocerSave App:${NC} http://localhost:8091"
-kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/frontend 8091:80 > /dev/null 2>&1 &
+kubectl port-forward --address 0.0.0.0 -n $NAMESPACE svc/frontend 8091:5000 > /dev/null 2>&1 &
 
 # Main Nginx Proxy (alternative entry point for debugging)
 echo -e "${YELLOW}Nginx Proxy (Debug):${NC} http://localhost:8090"
