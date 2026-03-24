@@ -216,6 +216,15 @@ deploy_single() {
         fi
     done
 
+    # LocalStack Dummy Creds
+    export AWS_ACCESS_KEY_ID="test"
+    export AWS_SECRET_ACCESS_KEY="test"
+    export AWS_DEFAULT_REGION="us-east-1"
+
+    if ! kubectl get namespace $NAMESPACE > /dev/null 2>&1; then
+        kubectl create namespace $NAMESPACE
+    fi
+
     # Ensure we are targeting the correct cluster context
     # We do NOT run update-kubeconfig here to avoid switching context if the user is already set up
     # However, for safety in CI/CD or fresh terminals, we check if the context exists first
