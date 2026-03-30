@@ -1,4 +1,0 @@
-apple,3,4.0
-banana,6,3.99
-banana,6,3.99
-pear,5,2.99

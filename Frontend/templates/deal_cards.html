@@ -1,0 +1,58 @@
+{% if deals %}
+    {% for deal in deals %}
+    <div class="deal-card">
+        <div class="deal-card-image">
+            <div class="deal-card-badges">
+                <div class="deal-card-drop
+                    {% if deal.trend == 'down' %}deal-card-drop-down{% endif %}
+                    {% if deal.trend == 'up' %}deal-card-drop-up{% endif %}
+                ">
+                    {% if deal.trend == 'down' %}
+                        <i data-lucide="trending-down" width="12"></i>
+                        -{{ deal.percentage_change }}%
+                    {% elif deal.trend == 'up' %}
+                        <i data-lucide="trending-up" width="12"></i>
+                        +{{ deal.percentage_change }}%
+                    {% else %}
+                        <i data-lucide="sparkles" width="12"></i> NEW
+                    {% endif %}
+                </div>
+                {% if deal.is_on_sale %}
+                <div class="deal-card-sale-badge">
+                    <i data-lucide="tag" width="12"></i> SALE
+                </div>
+                {% endif %}
+            </div>
+            <!-- Display the product image if the URL exists, otherwise show a fallback icon -->
+            {% if deal.image_url %}
+                <img src="{{ deal.image_url }}" alt="{{ deal.item }}" class="product-image">
+            {% else %}
+                <i data-lucide="shopping-basket" width="48" opacity="0.5"></i>
+            {% endif %}
+        </div>
+        <div class="deal-card-content">
+            <h4>{{ deal.item }}</h4>
+            <div class="deal-card-store">
+                <i data-lucide="store" width="16"></i> {{ deal.store }}
+            </div>
+            <div class="price-container">
+                <span class="current-price">${{ "%.2f"|format(deal.price) }}</span>
+                {% if deal.oldPrice %}
+                <span class="old-price">${{ "%.2f"|format(deal.oldPrice) }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    {% if not error %}
+    <div class="w-full text-center" style="grid-column: 1 / -1; padding: 3rem; background: var(--panel-bg); border-radius: 1rem; border: 1px dashed var(--border-color);">
+        <i data-lucide="search-x" width="48" style="color: var(--text-secondary); margin: 0 auto 1rem;"></i>
+        {% if search_query or category_filter %}
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">No deals found matching your criteria. Try broadening your search!</p>
+        {% else %}
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Our scrapers are currently gathering new data. Please check back shortly.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endif %}

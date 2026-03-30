@@ -14,7 +14,6 @@ spec:
       labels:
         app: catalog-service
     spec:
-      # The incorrect dnsConfig has been removed.
       containers:
       - name: catalog-service
         image: grocersave/catalog-service:latest
@@ -39,10 +38,7 @@ spec:
               name: postgres-creds
               key: POSTGRES_PASSWORD
         - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-creds
-              key: POSTGRES_DB
+          value: "postgres" # Hardcode to the correct database
 ---
 apiVersion: v1
 kind: Service

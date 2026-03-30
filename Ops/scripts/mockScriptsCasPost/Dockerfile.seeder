@@ -1,0 +1,19 @@
+# Use an official Python runtime that is compatible with the cassandra-driver
+FROM python:3.11-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the dependencies, including the cassandra-driver
+# This will succeed because we are on Python 3.11
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the seeder script into the container
+COPY cassandra_seed_gen.py .
+
+# The command to run when the container starts.
+# It will execute the python script.
+CMD [ "python", "./cassandra_seed_gen.py" ]

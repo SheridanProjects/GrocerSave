@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
-// It assumes the table has been created manually.
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'grocer_admin',
   host: process.env.DB_HOST || 'postgres',
@@ -29,17 +28,48 @@ app.get('/health', (req, res) => {
   });
 });
 
-// GET /products - Fetches all products from the database
+// GET /products - Now supports filtering by search term and category
 app.get('/products', async (req, res) => {
+  const { search, category } = req.query;
+
+  let query = 'SELECT id, name, description, image_url, category FROM products';
+  const params = [];
+  const whereClauses = [];
+
+  if (search) {
+    params.push(`%${search}%`);
+    whereClauses.push(`name ILIKE $${params.length}`);
+  }
+
+  if (category) {
+    params.push(category);
+    whereClauses.push(`category = $${params.length}`);
+  }
+
+  if (whereClauses.length > 0) {
+    query += ' WHERE ' + whereClauses.join(' AND ');
+  }
+
   try {
-    // The query now assumes the 'id' column is of type UUID
-    const { rows } = await pool.query('SELECT id, name, description, image_url FROM products');
+    const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
     console.error("Error fetching products:", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// GET /categories - A new endpoint to fetch all unique product categories
+app.get('/categories', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT DISTINCT category FROM products ORDER BY category');
+    res.json(rows.map(row => row.category));
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 // --- SERVER START ---
 app.listen(port, () => {

@@ -20,10 +20,11 @@ const parseRowPrices = (rows) => {
   if (!rows) return [];
   return rows.map(row => {
     return {
-      product_id: row.product_id,
+      product_id: row.product_id.toString(),
       store_name: row.store_id.toString(),
       price: parseFloat(row.price.toString()),
-      timestamp: row.recorded_at
+      timestamp: row.recorded_at,
+      is_on_sale: row.is_on_sale
     };
   });
 };
@@ -39,24 +40,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// CORRECTED ROUTE ORDER
-// The more specific route '/latest' must be defined BEFORE the dynamic route '/:productId'.
-app.get('/prices/latest', async (req, res) => {
+app.get('/prices/all', async (req, res) => {
   try {
     const query = 'SELECT * FROM price_history';
     const allPrices = await client.execute(query);
-
-    const latestPrices = {};
-    allPrices.rows.forEach(row => {
-      const productIdStr = row.product_id.toString();
-      if (!latestPrices[productIdStr] || row.recorded_at > latestPrices[productIdStr].recorded_at) {
-        latestPrices[productIdStr] = row;
-      }
-    });
-
-    res.json(parseRowPrices(Object.values(latestPrices)));
+    res.json(parseRowPrices(allPrices.rows));
   } catch (err) {
-    console.error("Error fetching latest prices:", err);
+    console.error("Error fetching all prices:", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
