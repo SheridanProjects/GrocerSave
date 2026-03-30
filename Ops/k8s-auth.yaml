@@ -14,7 +14,6 @@ spec:
       labels:
         app: auth-service
     spec:
-      # The incorrect dnsConfig has been removed.
       containers:
       - name: auth-service
         image: grocersave/auth-service:latest
@@ -37,10 +36,7 @@ spec:
               name: postgres-creds
               key: POSTGRES_PASSWORD
         - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-creds
-              key: POSTGRES_DB
+          value: "postgres" # Hardcode to the correct database
         - name: REDIS_HOST
           value: "redis"
 ---

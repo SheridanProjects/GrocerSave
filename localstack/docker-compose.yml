@@ -1,10 +1,11 @@
 services:
   localstack:
     container_name: localstack-main
-    image: localstack/localstack-pro
+    image: localstack/localstack-pro:latest
     ports:
       - "4566:4566"
       - "4510-4559:4510-4559"
+      - "8080:8080" # Expose EKS port to the host
     environment:
       # --- AUTH ---
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}

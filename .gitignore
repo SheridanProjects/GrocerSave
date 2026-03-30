@@ -59,3 +59,5 @@ target/
 # GrocerSave Specific
 Ops/k8s-grocersave-apps.gen.yaml
 Ops/*.gen.yaml
+
+.kubeconfig-localstack

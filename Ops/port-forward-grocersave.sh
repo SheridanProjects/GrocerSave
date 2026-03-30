@@ -13,13 +13,31 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Ensure we are on the right cluster
-#CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null)
-#EXPECTED_CONTEXT="arn:aws:eks:us-east-1:000000000000:cluster/$CLUSTER_NAME"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ "$CURRENT_CONTEXT" != "$EXPECTED_CONTEXT" ]; then
-     echo -e "${YELLOW}Switching context to $CLUSTER_NAME...${NC}"
-     #awslocal eks update-kubeconfig --name "$CLUSTER_NAME" > /dev/null 2>&1
+# ISOLATE KUBECONFIG: Automatically point kubectl to LocalStack
+export KUBECONFIG="$SCRIPT_DIR/.kubeconfig-localstack"
+
+# ==========================================
+# WRAPPER FUNCTION: Replaces awslocal
+# ==========================================
+local_aws() {
+    aws --endpoint-url=http://localhost:4566 "$@"
+}
+
+# Set dummy creds for LocalStack CLI calls
+export AWS_ACCESS_KEY_ID="test"
+export AWS_SECRET_ACCESS_KEY="test"
+export AWS_DEFAULT_REGION="us-east-1"
+
+# Ensure we have the kubeconfig before trying to port-forward
+if [ ! -f "$KUBECONFIG" ]; then
+     echo -e "${YELLOW}Isolated Kubeconfig not found. Attempting to fetch it from LocalStack...${NC}"
+     local_aws eks update-kubeconfig --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG" > /dev/null 2>&1
+     if [ ! -f "$KUBECONFIG" ]; then
+         echo -e "${RED}Error: Failed to fetch kubeconfig. Is the cluster running? Run the deploy script first.${NC}"
+         exit 1
+     fi
 fi
 
 echo -e "${GREEN}Starting Port Forwarding for GrocerSave Services...${NC}"
