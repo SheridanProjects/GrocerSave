@@ -118,9 +118,9 @@ if __name__ == "__main__":
     # PostgreSQL args
     parser.add_argument("--pghost", default="127.0.0.1", help="PostgreSQL host IP address.")
     parser.add_argument("--pgport", type=int, default=5432, help="PostgreSQL connection port.")
-    parser.add_argument("--pguser", default="postgres", help="PostgreSQL username.")
-    parser.add_argument("--pgpassword", default="postgres", help="PostgreSQL password.")
-    parser.add_argument("--pgdatabase", default="postgres", help="PostgreSQL database name.")
+    parser.add_argument("--pguser", default="grocer_admin", help="PostgreSQL username.")
+    parser.add_argument("--pgpassword", default="dev_secret_123", help="PostgreSQL password.")
+    parser.add_argument("--pgdatabase", default="grocersave_db", help="PostgreSQL database name.")
 
     args = parser.parse_args()
 

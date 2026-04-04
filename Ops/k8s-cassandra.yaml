@@ -1,11 +1,12 @@
-# 4. CASSANDRA (Price History)
-# Using single-node config for local dev
+# 4. CASSANDRA (Price History) - StatefulSet for Data Persistence
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: cassandra
   namespace: grocersave-dev
 spec:
+  serviceName: "cassandra"
+  replicas: 1
   selector:
     matchLabels:
       app: cassandra
@@ -16,7 +17,9 @@ spec:
     spec:
       containers:
       - name: cassandra
-        image: cassandra:4
+        # Use your custom image from Docker Hub
+        image: abumosameh/cassandra-grocersave:latest
+        imagePullPolicy: Always # Ensures the latest image is always pulled
         ports:
         - containerPort: 9042
         env:
@@ -30,6 +33,19 @@ spec:
           value: "128M"
         - name: MAX_HEAP_SIZE
           value: "512M"
+        volumeMounts:
+        - name: cassandra-data
+          mountPath: /var/lib/cassandra
+  # This template creates a PersistentVolumeClaim for each pod.
+  # The data will survive pod restarts.
+  volumeClaimTemplates:
+  - metadata:
+      name: cassandra-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi # Request 10GB of storage
 ---
 apiVersion: v1
 kind: Service
