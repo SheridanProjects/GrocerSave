@@ -51,9 +51,9 @@ func main() {
 	dbPass := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
 
-	if dbUser == "" { dbUser = "postgres" }
-	if dbPass == "" { dbPass = "postgres" }
-	if dbName == "" { dbName = "postgres" }
+	if dbUser == "" { dbUser = "grocer_admin" }
+	if dbPass == "" { dbPass = "dev_secret_123" }
+	if dbName == "" { dbName = "grocersave_db" }
 	if dbHost == "" { dbHost = "postgres" }
 
 	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbUser, dbPass, dbName)

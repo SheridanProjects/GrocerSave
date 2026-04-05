@@ -1,10 +1,12 @@
-# 2. POSTGRES (Catalog/Auth DB)
+# 2. POSTGRES (Catalog/Auth DB) - StatefulSet for Data Persistence
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgres
   namespace: grocersave-dev
 spec:
+  serviceName: "postgres"
+  replicas: 1
   selector:
     matchLabels:
       app: postgres
@@ -15,7 +17,9 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:15-alpine
+        # Use your custom image from Docker Hub
+        image: abumosameh/postgres-grocersave:latest
+        imagePullPolicy: Always # Ensures the latest image is always pulled
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -34,6 +38,19 @@ spec:
               key: POSTGRES_DB
         ports:
         - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+  # This template creates a PersistentVolumeClaim for each pod.
+  # The data will survive pod restarts.
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi # Request 5GB of storage
 ---
 apiVersion: v1
 kind: Service
