@@ -15,11 +15,38 @@ spec:
       labels:
         app: postgres
     spec:
+      # No fsGroup needed, the initContainer is more explicit.
+      volumes:
+        - name: xray-config-volume
+          configMap:
+            name: xray-daemon-config
+      initContainers:
+      - name: fix-pg-permissions
+        image: alpine:latest # A small, simple image
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Fixing permissions for Postgres data directory..."
+            chown -R 999:999 /var/lib/postgresql/data
+            chmod 700 /var/lib/postgresql/data
+            echo "Permissions fixed."
+        securityContext:
+          runAsUser: 0 # Must run as root to be able to chown
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
       containers:
       - name: postgres
-        # Use your custom image from Docker Hub
         image: abumosameh/postgres-grocersave:latest
-        imagePullPolicy: Always # Ensures the latest image is always pulled
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 999 # Continue running the process as the postgres user
+        command: ["postgres"]
+        args:
+          - "-c"
+          - "log_destination=stderr"
+          - "-c"
+          - "log_statement=all"
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -36,13 +63,36 @@ spec:
             secretKeyRef:
               name: postgres-creds
               key: POSTGRES_DB
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_ACCESS_KEY_ID
+          value: "test"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "test"
+        - name: AWS_XRAY_DAEMON_ADDRESS
+          value: "127.0.0.1:2000"
         ports:
         - containerPort: 5432
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
-  # This template creates a PersistentVolumeClaim for each pod.
-  # The data will survive pod restarts.
+      - name: xray-daemon
+        image: amazon/aws-xray-daemon:3.x
+        command: ["/xray", "-c", "/etc/xray/xray-daemon.yaml"]
+        ports:
+          - containerPort: 2000
+            protocol: UDP
+        env:
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_ACCESS_KEY_ID
+          value: "test"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "test"
+        volumeMounts:
+          - name: xray-config-volume
+            mountPath: /etc/xray
+            readOnly: true
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
@@ -50,7 +100,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 5Gi # Request 5GB of storage
+          storage: 5Gi
 ---
 apiVersion: v1
 kind: Service

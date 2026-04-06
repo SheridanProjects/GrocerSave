@@ -25,7 +25,7 @@ export KUBECONFIG="$SCRIPT_DIR/.kubeconfig-localstack"
 # WRAPPER FUNCTION: Replaces awslocal
 # ==========================================
 local_aws() {
-    aws --endpoint-url=http://localhost:4566 "$@"
+    aws --endpoint-url=http://localhost:4566 --region us-east-1 "$@"
 }
 
 # ==========================================
@@ -343,6 +343,16 @@ deploy_all() {
     kubectl wait --for=condition=ready pod --all -n $NAMESPACE --timeout=120s >/dev/null 2>&1 || {
         echo -e "${YELLOW}  Some platform pods took too long, proceeding anyway (they may still be starting).${NC}"
     }
+
+    echo -e "\n${YELLOW}>>> Deploying Logging Service (Fluent Bit)...${NC}"
+    LOGGING_MANIFESTS=("k8s-fluent-bit-config.yaml" "k8s-fluent-bit-daemonset.yaml")
+    for MANIFEST in "${LOGGING_MANIFESTS[@]}"; do
+        if [ -f "$SCRIPT_DIR/$MANIFEST" ]; then
+            kubectl apply -f "$SCRIPT_DIR/$MANIFEST"
+        else
+            echo -e "${RED}Warning: Logging manifest $MANIFEST not found. Skipping.${NC}"
+        fi
+    done
 
     echo -e "\n${YELLOW}>>> Building & Pushing Application Images...${NC}"
     deploy_service "auth-service"
