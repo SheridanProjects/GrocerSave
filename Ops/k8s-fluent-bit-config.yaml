@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: grocersave-dev
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+
+    # --- APPLICATION LOGS INPUT ---
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        Parser            cri
+        Tag               app.*
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+
+    # --- PERFORMANCE METRICS INPUTS ---
+    [INPUT]
+        Name              cpu
+        Tag               performance.cpu
+        Interval_Sec      30
+
+    [INPUT]
+        Name              mem
+        Tag               performance.mem
+        Interval_Sec      30
+
+    # --- APPLICATION LOGS FILTER ---
+    [FILTER]
+        Name                kubernetes
+        Match               app.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     app.var.log.containers.
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+
+    # --- PERFORMANCE METRICS FILTER ---
+    [FILTER]
+        Name                kubernetes
+        Match               performance.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     performance.
+        # The Merge_Log directive is removed because metric inputs don't have a 'log' field.
+
+    # --- APPLICATION LOGS OUTPUT ---
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               app.*
+        region              us-east-1
+        log_group_name      /aws/containerinsights/grocersave-dev/application
+        log_stream_prefix   app-
+        auto_create_group   true
+        endpoint            host.k3d.internal
+        port                4566
+        tls                 Off
+        log_key             log
+
+    # --- PERFORMANCE METRICS OUTPUT ---
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               performance.*
+        region              us-east-1
+        log_group_name      /aws/containerinsights/grocersave-dev/performance
+        log_stream_prefix   metric-
+        auto_create_group   true
+        endpoint            host.k3d.internal
+        port                4566
+        tls                 Off
+        # The log_key is removed to send the full JSON record as the log message.
+
+  parsers.conf: |
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+
+    [PARSER]
+        Name        cri
+        Format      regex
+        Regex       ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<log>.*)$
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+        Time_Keep   On

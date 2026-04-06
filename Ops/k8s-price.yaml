@@ -14,7 +14,6 @@ spec:
       labels:
         app: price-service
     spec:
-      # The incorrect dnsConfig has been removed.
       containers:
       - name: price-service
         image: grocersave/price-service:latest
@@ -28,6 +27,35 @@ spec:
           value: "cassandra"
         - name: RABBITMQ_HOST
           value: "rabbitmq"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_ACCESS_KEY_ID
+          value: "test"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "test"
+        - name: AWS_XRAY_DAEMON_ADDRESS
+          value: "127.0.0.1:2000"
+      - name: xray-daemon
+        image: amazon/aws-xray-daemon:3.x
+        command: ["/xray", "-c", "/etc/xray/xray-daemon.yaml"]
+        ports:
+          - containerPort: 2000
+            protocol: UDP
+        env:
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_ACCESS_KEY_ID
+          value: "test"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "test"
+        volumeMounts:
+          - name: xray-config-volume
+            mountPath: /etc/xray
+            readOnly: true
+      volumes:
+        - name: xray-config-volume
+          configMap:
+            name: xray-daemon-config
 ---
 apiVersion: v1
 kind: Service

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-xray-daemon-config
+  namespace: grocersave-dev
+data:
+  xray-daemon.yaml: |
+    # Default logging level
+    LogLevel: "prod"
+    # Forward to localstack endpoint for k3d
+    Endpoint: "http://host.k3d.internal:4566"
+    # Bind to all interfaces inside the pod
+    Socket:
+      Address: "0.0.0.0:2000"
