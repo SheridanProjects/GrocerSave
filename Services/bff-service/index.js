@@ -14,6 +14,7 @@ const PRICE_URL = process.env.PRICE_URL || 'http://price-service:8182';
 
 // --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
+  console.log('BFF service health check called');
   res.json({ status: 'UP', service: 'bff-service' });
 });
 

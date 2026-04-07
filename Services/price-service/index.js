@@ -31,8 +31,10 @@ const parseRowPrices = (rows) => {
 
 // --- API ENDPOINTS ---
 app.get('/health', (req, res) => {
+  console.log('Price service health check called');
   client.execute('SELECT now() FROM system.local', (err, result) => {
     if (err) {
+      console.error('Health check failed:', err);
       res.status(500).json({ status: 'DOWN', error: 'Cassandra connection failed' });
     } else {
       res.json({ status: 'UP', service: 'price-service' });
@@ -57,7 +59,8 @@ app.get('/prices/:productId', async (req, res) => {
     const query = 'SELECT * FROM price_history WHERE product_id = ?';
     const result = await client.execute(query, [productId], { prepare: true });
     res.json(parseRowPrices(result.rows));
-  } catch (err) {
+  } catch (err)
+ {
     console.error(`Error fetching prices for product ${productId}:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
