@@ -19,8 +19,10 @@ const pool = new Pool({
 
 // --- API ENDPOINTS ---
 app.get('/health', (req, res) => {
+  console.log('Catalog service health check called');
   pool.query('SELECT NOW()', (err, result) => {
     if (err) {
+      console.error('Health check failed:', err);
       res.status(500).json({ status: 'DOWN', error: 'Postgres connection failed' });
     } else {
       res.json({ status: 'UP', service: 'catalog-service' });
