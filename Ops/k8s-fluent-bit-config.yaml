@@ -24,12 +24,12 @@ data:
     [INPUT]
         Name              cpu
         Tag               performance.cpu
-        Interval_Sec      30
+        Interval_Sec      360
 
     [INPUT]
         Name              mem
         Tag               performance.mem
-        Interval_Sec      30
+        Interval_Sec      360
 
     # --- APPLICATION LOGS FILTER ---
     [FILTER]

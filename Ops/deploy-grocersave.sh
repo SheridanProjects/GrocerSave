@@ -345,7 +345,7 @@ deploy_all() {
     }
 
     echo -e "\n${YELLOW}>>> Deploying Logging Service (Fluent Bit)...${NC}"
-    LOGGING_MANIFESTS=("k8s-fluent-bit-config.yaml" "k8s-fluent-bit-daemonset.yaml")
+    LOGGING_MANIFESTS=("k8s-fluent-bit-config.yaml" "k8s-fluent-bit-daemonset.yaml" "k8s-xray-config.yaml")
     for MANIFEST in "${LOGGING_MANIFESTS[@]}"; do
         if [ -f "$SCRIPT_DIR/$MANIFEST" ]; then
             kubectl apply -f "$SCRIPT_DIR/$MANIFEST"
@@ -353,6 +353,11 @@ deploy_all() {
             echo -e "${RED}Warning: Logging manifest $MANIFEST not found. Skipping.${NC}"
         fi
     done
+
+    echo -e "\n${YELLOW}>>> Deploying Security Monitoring (Falco)...${NC}"
+    if [ -f "$SCRIPT_DIR/k8s-falco.yaml" ]; then
+        kubectl apply -f "$SCRIPT_DIR/k8s-falco.yaml"
+    fi
 
     echo -e "\n${YELLOW}>>> Building & Pushing Application Images...${NC}"
     deploy_service "auth-service"
