@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrocerSave | Real-Time Grocery Tracking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Added icons for browser tabs -->
+    <!-- Tabicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="/static/images/site.webmanifest">
     <!-- Added a description meta tag for better SEO based on your text -->
     <meta name="description" content="GrocerSave is a comprehensive grocery tracking platform designed to help users minimize their spending by aggregating real-time price data from multiple local stores.">
     <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.263.1/dist/lucide-react.min.js"></script>
@@ -16,15 +22,17 @@
             <div class="max-w-7xl mx-auto px-4 navbar-inner">
                 <a href="{{ url_for('home') }}" class="navbar-logo">
                     <div class="icon-wrapper">
-                        <i data-lucide="shopping-cart" style="color: #000;"></i>
+                        <img src="{{ url_for('static', filename='images/GrocerSave Icon.jpeg') }}" class="navbar-logo-img">
                     </div>
                     <h1>Grocer<span>Save</span></h1>
                 </a>
 
                 <div class="hidden md:flex items-center gap-8">
                     <a href="{{ url_for('home') }}#deals" class="nav-link">Top Deals</a>
-                    <a href="#" class="nav-link">Store Directory</a>
+                    <a href="{{ url_for('home') }}#store-directory" class="nav-link">Store Directory</a>
                     <a href="#about" class="nav-link">How it Works</a>
+                    <a href="#contact" class="nav-link">Contact Us</a>
+                    <a href="{{ url_for('home') }}#privacy-policy" class="nav-link">Privacy Policy</a>
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -37,8 +45,10 @@
                         </a>
                     {% else %}
                         <a href="{{ url_for('login') }}" class="btn btn-accent">
-                            <i data-lucide="log-in" width="18"></i> Sign In
+                            <img src="{{ url_for('static', filename='images/user-icon.png') }}" class="signin-icon">
+                            Sign In
                         </a>
+                    
                     {% endif %}
                 </div>
             </div>
@@ -69,7 +79,7 @@
                 <div class="footer-col">
                     <div class="navbar-logo mb-2">
                         <div class="icon-wrapper" style="padding: 0.4rem;">
-                            <i data-lucide="shopping-cart" style="color: #000;" width="20"></i>
+                            <img src="{{ url_for('static', filename='images/GrocerSave Icon.jpeg') }}" class="navbar-logo-img">
                         </div>
                         <h1 style="font-size: 1.2rem;">Grocer<span>Save</span></h1>
                     </div>
@@ -87,10 +97,9 @@
                 <div class="footer-col">
                     <h3>Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="{{ url_for('home') }}">Today's Deals</a></li>
-                        <li><a href="#">Price History Charts</a></li>
-                        <li><a href="#">Store Directory</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('home') }}#deals">Today's Deals</a></li>
+                        <li><a href="{{ url_for('home') }}#store-directory">Store Directory</a></li>
+                        <li><a href="{{ url_for('home') }}#privacy-policy">Privacy Policy</a></li>
                     </ul>
                 </div>
 
@@ -100,7 +109,7 @@
                     <div class="contact-info">
                         <div class="contact-item">
                             <i data-lucide="mail" width="18"></i>
-                            <span>support@grocersave.com</span>
+                            <span>support.grocersave@grocersave.com</span>
                         </div>
                         <div class="contact-item">
                             <i data-lucide="phone" width="18"></i>

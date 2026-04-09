@@ -1,8 +1,12 @@
 import requests
+import uvicorn
+from a2wsgi import WSGIMiddleware
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 app = Flask(__name__)
 app.secret_key = 'a_secure_random_secret_key'  # Replace with a real secret key
+
+asgi_app = WSGIMiddleware(app)
 
 # Configuration for backend services
 BFF_API_URL = "http://nginx-proxy:80/api"

@@ -67,6 +67,48 @@
     </div>
 </section>
 
+<section id="store-directory" class="page-section">
+    <h2 class="section-title">Store <span>Directory</span></h2>
+    <p>Local grocery stores supported by Grocer<span>Save</span>.</p>
+
+    <ul class="store-list">
+        <li>Walmart <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/walmart.png') }}" class="store-icon"></span></li>
+        <li>Costco <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/costco.png') }}" class="store-icon"></span></li>
+        <li>No Frills <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/nofrills.png') }}" class="store-icon"></span></li>
+        <li>FreshCo <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/freshco.png') }}" class="store-icon"></span></li>
+        <li>Metro <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/metro.png') }}" class="store-icon"></span></li>
+        <li>Food Basics <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/foodbasics.png') }}" class="store-icon"></span></li>
+        <li>Superstore <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/superstore.png') }}" class="store-icon"></span></li>
+        <li>Loblaws <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/loblaws.png') }}" class="store-icon"></span></li>
+        <li>Sobeys <span class="store-icon-wrapper"><img src="{{ url_for('static', filename='images/sobeys.png') }}" class="store-icon"></span></li>
+    </ul>
+</section>
+
+<section id="privacy-policy" class="page-section">
+    <h2 class="section-title">Privacy <span>Policy</span></h2>
+    <p>Last updated: April 2026</p>
+
+    <p>
+        GrocerSave collects only the information necessary to provide real-time grocery price tracking,
+        user authentication, and personalized deal recommendations. This includes account details such as
+        username, email, and optional preferences.
+    </p>
+
+    <p>
+        We do not sell or share your personal information with third parties. Data is used solely to
+        improve platform functionality and provide accurate pricing insights.
+    </p>
+
+    <p>
+        You may request deletion of your account or stored data at any time by contacting
+        <strong>support.grocersave@grocersave.com</strong>.
+    </p>
+
+    <p>
+        By using GrocerSave, you agree to this Privacy Policy and our Terms of Service.
+    </p>
+</section>
+
 {% if user %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
