@@ -31,6 +31,15 @@ spec:
           value: "http://catalog-service:8181"
         - name: PRICE_URL
           value: "http://price-service:8182"
+        - name: RESEND_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: resend-creds
+              key: RESEND_API_KEY
+        - name: RESEND_FROM
+          value: "onboarding@grocersave.app"
+        - name: RESEND_WELCOME_TEMPLATE_ID
+          value: "welcome"
 ---
 apiVersion: v1
 kind: Service

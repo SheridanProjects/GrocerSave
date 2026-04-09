@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const { sendWelcomeEmail } = require('./email/resend');
 
 const app = express();
 const port = process.env.PORT || 3100;
@@ -22,6 +23,12 @@ app.post('/auth/signup', async (req, res) => {
   try {
     const response = await axios.post(`${AUTH_URL}/signup`, req.body);
     res.status(response.status).json(response.data);
+
+    if (response.status === 201) {
+      const { username, email } = req.body || {};
+      Promise.resolve(sendWelcomeEmail({ to: email, firstName: username }))
+        .catch((err) => console.error('Welcome email failed:', err && err.message ? err.message : err));
+    }
   } catch (error) {
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Auth Service is unavailable' });
   }

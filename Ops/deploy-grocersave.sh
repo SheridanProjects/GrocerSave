@@ -330,6 +330,13 @@ deploy_all() {
     kubectl create secret generic postgres-creds --from-literal=POSTGRES_USER=postgres --from-literal=POSTGRES_PASSWORD=postgres --from-literal=POSTGRES_DB=postgres -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
     kubectl create secret generic rabbitmq-creds --from-literal=RABBITMQ_DEFAULT_USER=guest --from-literal=RABBITMQ_DEFAULT_PASS=guest -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
+    local resend_key_file="${RESEND_API_KEY_FILE:-$HOME/.config/grocersave/resend_api_key}"
+    if [ -f "$resend_key_file" ]; then
+        kubectl create secret generic resend-creds --from-file=RESEND_API_KEY="$resend_key_file" -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+    else
+        echo -e "${YELLOW}Warning: Resend key file not found at '$resend_key_file'. Welcome emails will be disabled until RESEND_API_KEY is provided.${NC}"
+    fi
+
     PLATFORM_MANIFESTS=("k8s-redis.yaml" "k8s-postgres.yaml" "k8s-rabbitmq.yaml" "k8s-cassandra.yaml" "k8s-elasticsearch.yaml")
     for MANIFEST in "${PLATFORM_MANIFESTS[@]}"; do
         if [ -f "$SCRIPT_DIR/$MANIFEST" ]; then
