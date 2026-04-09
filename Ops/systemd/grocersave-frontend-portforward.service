@@ -1,0 +1,16 @@
+[Unit]
+Description=GrocerSave kubectl port-forward (frontend service to localhost 8091)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=-/etc/default/grocersave-portforward
+ExecStart=/usr/bin/kubectl port-forward --address 127.0.0.1 -n grocersave-dev svc/frontend 8091:5000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
