@@ -156,7 +156,7 @@ body {
 }
 
 .icon-wrapper {
-  background: linear-gradient(135deg, var(--accent-color), #0e5e19c2);
+  background: linear-gradient(135deg, var(--accent-color), #129684c2);
   padding: 0.5rem;
   border-radius: 0.75rem;
   display: flex;
