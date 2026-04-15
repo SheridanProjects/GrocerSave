@@ -41,7 +41,7 @@ spec:
         imagePullPolicy: Always
         securityContext:
           runAsUser: 999 # Continue running the process as the postgres user
-        command: ["postgres"]
+#        command: ["postgres"]
         args:
           - "-c"
           - "log_destination=stderr"
